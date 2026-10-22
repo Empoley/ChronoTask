@@ -85,7 +85,15 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 -- ==============================================================================
 -- RLS HELPER FUNCTIONS (SECURITY DEFINER to completely eliminate RLS recursion)
 -- ==============================================================================
-CREATE OR REPLACE FUNCTION public.is_project_owner(p_id UUID)
+DROP FUNCTION IF EXISTS public.is_project_owner(UUID);
+DROP FUNCTION IF EXISTS public.is_project_collaborator(UUID);
+DROP FUNCTION IF EXISTS public.can_edit_project(UUID);
+
+DROP FUNCTION IF EXISTS public.is_project_owner(TEXT);
+DROP FUNCTION IF EXISTS public.is_project_collaborator(TEXT);
+DROP FUNCTION IF EXISTS public.can_edit_project(TEXT);
+
+CREATE OR REPLACE FUNCTION public.is_project_owner(p_id TEXT)
 RETURNS BOOLEAN
 LANGUAGE sql
 SECURITY DEFINER
@@ -98,7 +106,7 @@ AS $$
   );
 $$;
 
-CREATE OR REPLACE FUNCTION public.is_project_collaborator(p_id UUID)
+CREATE OR REPLACE FUNCTION public.is_project_collaborator(p_id TEXT)
 RETURNS BOOLEAN
 LANGUAGE sql
 SECURITY DEFINER
@@ -112,7 +120,7 @@ AS $$
   );
 $$;
 
-CREATE OR REPLACE FUNCTION public.can_edit_project(p_id UUID)
+CREATE OR REPLACE FUNCTION public.can_edit_project(p_id TEXT)
 RETURNS BOOLEAN
 LANGUAGE sql
 SECURITY DEFINER
