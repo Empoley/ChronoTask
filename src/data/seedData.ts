@@ -13,88 +13,163 @@ export function getRelativeDateStr(daysFromNow: number, hours: number = 17, minu
 
 export function getDefaultSeedData(baseDateStr: string = STATIC_BASE_TIME): GameState {
   const createdAtStr = baseDateStr;
+
   const tasks: Task[] = [
-    // Imminent / Overdue & Today
+    // ==========================================
+    // 1. TODAY & OVERDUE (Imminent Deadlines)
+    // ==========================================
+    {
+      id: 'task-overdue-1',
+      title: 'Submit Cloud Expense Optimization Report',
+      description: 'Audit monthly cloud consumption, compile cost center breakdown, and deliver finance optimization summary.',
+      deadline: getRelativeDateStr(-1, 16, 0, baseDateStr), // 1 day overdue
+      difficulty: 'medium',
+      questId: undefined,
+      completed: false,
+      tags: ['Finance', 'DevOps'],
+      notes: 'Waiting on final invoice consolidation from the billing administrator before submission.',
+      createdAt: getRelativeDateStr(-3, 10, 0, baseDateStr)
+    },
     {
       id: 'task-1',
-      title: 'Dispatch the Daily Tactical Standup',
-      description: 'Align the party on sprint blockers and calibrate milestone velocity.',
-      deadline: getRelativeDateStr(0, 18, 0, baseDateStr), // Today 6 PM
+      title: 'Hold Daily Team Standup',
+      description: 'Align the team on sprint blockers, review PR queue, and calibrate milestone delivery velocity.',
+      deadline: getRelativeDateStr(0, 14, 0, baseDateStr), // Today 2:00 PM
       difficulty: 'easy',
       questId: 'quest-1',
       completed: false,
-      xpReward: 30,
-      goldReward: 15,
-      tags: ['Management', 'Ritual'],
+      tags: ['Management', 'Meeting'],
+      createdAt: createdAtStr
+    },
+    {
+      id: 'task-today-2',
+      title: 'Hotfix: Resolve SSL Handshake Timeout on Staging',
+      description: 'Patch nginx edge ingress proxy configuration to prevent intermittent TLS termination timeouts.',
+      deadline: getRelativeDateStr(0, 16, 30, baseDateStr), // Today 4:30 PM
+      difficulty: 'hard',
+      questId: 'quest-1',
+      completed: false,
+      tags: ['DevOps', 'Incident'],
+      notes: 'Root cause identified in keepalive timeout threshold on external load balancer.',
       createdAt: createdAtStr
     },
     {
       id: 'task-2',
-      title: 'Review System Telemetry & Bug Reports',
-      description: 'Audit production logs and squash critical memory leaks in the cache handler.',
-      deadline: getRelativeDateStr(0, 21, 30, baseDateStr), // Today 9:30 PM
+      title: 'Review System Telemetry & Error Logs',
+      description: 'Audit production telemetry and resolve high-memory edge cases in the attention cache layer.',
+      deadline: getRelativeDateStr(0, 20, 0, baseDateStr), // Today 8:00 PM
       difficulty: 'medium',
       questId: 'quest-1',
       completed: false,
-      xpReward: 65,
-      goldReward: 35,
       tags: ['Engineering', 'Bugfix'],
       createdAt: createdAtStr
     },
+    {
+      id: 'task-today-4',
+      title: 'Approve Sprint Pull Requests & Code Reviews',
+      description: 'Review pending pull requests for security compliance, code standards, and unit test coverage.',
+      deadline: getRelativeDateStr(0, 22, 0, baseDateStr), // Today 10:00 PM
+      difficulty: 'easy',
+      questId: 'quest-1',
+      completed: false,
+      tags: ['CodeReview', 'Quality'],
+      createdAt: createdAtStr
+    },
 
-    // This Week
+    // ==========================================
+    // 2. THIS WEEK (Within next 7 days)
+    // ==========================================
+    {
+      id: 'task-tw-1',
+      title: 'Refactor Authentication Middleware for JWT Tokens',
+      description: 'Implement distributed token refresh logic with automated revocation list synchronization.',
+      deadline: getRelativeDateStr(1, 15, 0, baseDateStr), // 1 day
+      difficulty: 'medium',
+      questId: 'quest-1',
+      completed: false,
+      tags: ['Security', 'Backend'],
+      createdAt: createdAtStr
+    },
     {
       id: 'task-3',
-      title: 'Draft Chapter 3: Transformer Memory Dynamics',
-      description: 'Write 3,000 words breaking down attention cache compression mechanisms.',
-      deadline: getRelativeDateStr(3, 17, 0, baseDateStr), // 3 days
+      title: 'Draft Technical Spec: Memory Cache Dynamics',
+      description: 'Write detailed specification document detailing attention cache compression mechanisms.',
+      deadline: getRelativeDateStr(2, 17, 0, baseDateStr), // 2 days
       difficulty: 'hard',
       questId: 'quest-2',
       completed: false,
-      xpReward: 140,
-      goldReward: 70,
       tags: ['Research', 'DeepWork'],
+      notes: 'Sections 1 through 3 outlined. Initial mathematical proof verified.',
+      createdAt: createdAtStr
+    },
+    {
+      id: 'task-tw-2',
+      title: 'Conduct Usability Testing for Navigation Redesign',
+      description: 'Run 5 remote usability sessions to evaluate navigation readability and tab discoverability.',
+      deadline: getRelativeDateStr(3, 11, 30, baseDateStr), // 3 days
+      difficulty: 'medium',
+      questId: 'quest-4',
+      completed: false,
+      tags: ['Design', 'UX'],
       createdAt: createdAtStr
     },
     {
       id: 'task-4',
-      title: 'Calibrate Cardio & Isometric Conditioning',
-      description: 'Complete 10km tempo run and core stabilization circuit.',
+      title: 'Weekly Fitness & Cardio Conditioning',
+      description: 'Complete 10km tempo run and recovery workout routine as scheduled in marathon prep plan.',
       deadline: getRelativeDateStr(4, 8, 0, baseDateStr), // 4 days
       difficulty: 'easy',
       questId: 'quest-3',
       completed: false,
-      xpReward: 35,
-      goldReward: 20,
-      tags: ['Vitality', 'Health'],
+      tags: ['Health', 'Habit'],
+      createdAt: createdAtStr
+    },
+    {
+      id: 'task-tw-3',
+      title: 'Design System Color Token Migration Sync',
+      description: 'Align color tokens across web components and document semantic usage rules.',
+      deadline: getRelativeDateStr(5, 16, 0, baseDateStr), // 5 days
+      difficulty: 'easy',
+      questId: 'quest-4',
+      completed: false,
+      tags: ['Design', 'Frontend'],
+      createdAt: createdAtStr
+    },
+    {
+      id: 'task-tw-4',
+      title: 'Configure End-to-End Test Automation Suite',
+      description: 'Automate critical user flows including task creation, horizon filtering, and milestone delivery.',
+      deadline: getRelativeDateStr(6, 18, 0, baseDateStr), // 6 days
+      difficulty: 'hard',
+      questId: 'quest-1',
+      completed: false,
+      tags: ['QA', 'Testing'],
       createdAt: createdAtStr
     },
 
-    // NEXT WEEK (SEEDED HEAVILY TO TRIGGER WORKLOAD WARNING DEMONSTRATION!)
+    // ==========================================
+    // 3. NEXT WEEK (8 to 14 days out)
+    // ==========================================
     {
       id: 'task-5',
-      title: 'BOSS ENCOUNTER: Final Architecture RFC Review',
-      description: 'Present the distributed event-streaming architecture RFC before the executive council.',
-      deadline: getRelativeDateStr(8, 14, 0, baseDateStr), // 8 days (Next Week)
+      title: 'Final Architecture RFC Review & Presentation',
+      description: 'Present the distributed event-streaming architecture RFC before technical leadership.',
+      deadline: getRelativeDateStr(8, 14, 0, baseDateStr), // 8 days
       difficulty: 'epic',
       questId: 'quest-1',
       completed: false,
-      xpReward: 280,
-      goldReward: 150,
-      tags: ['Architecture', 'Boss'],
+      tags: ['Architecture', 'Leadership'],
       notes: 'RFC deck draft v1 complete. Reviewing Section 4 with security team before presentation.',
       createdAt: createdAtStr
     },
     {
       id: 'task-6',
-      title: 'Complete Benchmark Suite for LLM Agent Pipeline',
-      description: 'Run 1,200 multi-step test cases across 5 models and record latency curves.',
-      deadline: getRelativeDateStr(9, 17, 0, baseDateStr), // 9 days (Next Week)
+      title: 'Complete Benchmark Suite for LLM Pipeline',
+      description: 'Execute 1,200 multi-step test cases across 5 models and record throughput curves.',
+      deadline: getRelativeDateStr(9, 17, 0, baseDateStr), // 9 days
       difficulty: 'hard',
       questId: 'quest-2',
       completed: false,
-      xpReward: 150,
-      goldReward: 80,
       tags: ['Benchmarking', 'Research'],
       createdAt: createdAtStr
     },
@@ -102,339 +177,317 @@ export function getDefaultSeedData(baseDateStr: string = STATIC_BASE_TIME): Game
       id: 'task-7',
       title: 'Database Sharding & Zero-Downtime Migration Dry Run',
       description: 'Execute mock failover across read replicas and verify foreign key consistency.',
-      deadline: getRelativeDateStr(10, 19, 0, baseDateStr), // 10 days (Next Week)
+      deadline: getRelativeDateStr(10, 19, 0, baseDateStr), // 10 days
       difficulty: 'hard',
       questId: 'quest-1',
       completed: false,
-      xpReward: 135,
-      goldReward: 75,
       tags: ['DevOps', 'HighRisk'],
       createdAt: createdAtStr
     },
     {
       id: 'task-8',
-      title: 'Conduct Security Penetration Audit',
-      description: 'Inspect JWT revocation edge cases and audit third-party dependency vulnerabilities.',
-      deadline: getRelativeDateStr(11, 16, 0, baseDateStr), // 11 days (Next Week)
+      title: 'Conduct Security & Dependency Audit',
+      description: 'Inspect token revocation edge cases and audit third-party dependency vulnerabilities.',
+      deadline: getRelativeDateStr(11, 16, 0, baseDateStr), // 11 days
       difficulty: 'medium',
       questId: 'quest-1',
       completed: false,
-      xpReward: 70,
-      goldReward: 40,
       tags: ['Security', 'Audit'],
       createdAt: createdAtStr
     },
     {
       id: 'task-9',
-      title: 'Sync with External Stakeholders & Client Demo',
-      description: 'Deliver working alpha build demonstration and collect feedback matrix.',
-      deadline: getRelativeDateStr(12, 15, 0, baseDateStr), // 12 days (Next Week)
+      title: 'Client Alpha Demonstration & Feedback Sync',
+      description: 'Deliver working alpha build demonstration and collect stakeholder feedback matrix.',
+      deadline: getRelativeDateStr(12, 15, 0, baseDateStr), // 12 days
       difficulty: 'medium',
       questId: 'quest-1',
       completed: false,
-      xpReward: 65,
-      goldReward: 35,
       tags: ['Presentation', 'Client'],
       createdAt: createdAtStr
     },
+    {
+      id: 'task-nw-1',
+      title: 'Optimize Vector Search Index Partitioning',
+      description: 'Fine-tune HNSW index construction hyperparameters and evaluate recall-latency tradeoffs.',
+      deadline: getRelativeDateStr(13, 11, 0, baseDateStr), // 13 days
+      difficulty: 'hard',
+      questId: 'quest-2',
+      completed: false,
+      tags: ['Database', 'Performance'],
+      createdAt: createdAtStr
+    },
+    {
+      id: 'task-nw-2',
+      title: 'Sprint Retrospective & Velocity Calibration',
+      description: 'Review completed delivery metrics, analyze bottlenecks, and establish commitments for upcoming sprint.',
+      deadline: getRelativeDateStr(14, 16, 30, baseDateStr), // 14 days
+      difficulty: 'easy',
+      questId: 'quest-1',
+      completed: false,
+      tags: ['Management', 'Agile'],
+      createdAt: createdAtStr
+    },
 
-    // Next Month
+    // ==========================================
+    // 4. NEXT MONTH (15 to 30 days out)
+    // ==========================================
+    {
+      id: 'task-nm-1',
+      title: 'Perform Disaster Recovery Failover Simulation',
+      description: 'Trigger simulated regional outage on staging environment and measure recovery time objective (RTO).',
+      deadline: getRelativeDateStr(16, 14, 0, baseDateStr), // 16 days
+      difficulty: 'hard',
+      questId: 'quest-1',
+      completed: false,
+      tags: ['Reliability', 'DevOps'],
+      createdAt: createdAtStr
+    },
     {
       id: 'task-10',
       title: 'Submit Camera-Ready Conference Manuscript',
-      description: 'Finalize IEEE format styling, references, and supplementary appendix.',
-      deadline: getRelativeDateStr(21, 23, 59, baseDateStr), // 21 days (Next Month)
+      description: 'Finalize paper styling, bibliography references, and supplementary mathematical appendix.',
+      deadline: getRelativeDateStr(19, 23, 59, baseDateStr), // 19 days
       difficulty: 'epic',
       questId: 'quest-2',
       completed: false,
-      xpReward: 300,
-      goldReward: 200,
       tags: ['Publication', 'Milestone'],
+      notes: 'Finalizing IEEE camera-ready template styling and proofreading section citations.',
+      createdAt: createdAtStr
+    },
+    {
+      id: 'task-nm-2',
+      title: 'Conduct Peer Reviews on Attention Cache Paper',
+      description: 'Solicit feedback from external research collaborators and incorporate theoretical suggestions.',
+      deadline: getRelativeDateStr(21, 17, 0, baseDateStr), // 21 days
+      difficulty: 'medium',
+      questId: 'quest-2',
+      completed: false,
+      tags: ['Research', 'PeerReview'],
       createdAt: createdAtStr
     },
     {
       id: 'task-11',
       title: 'Quarterly Infrastructure Budget & License Renewal',
-      description: 'Audit cloud spending across AWS/GCP and negotiate enterprise renewals.',
-      deadline: getRelativeDateStr(26, 12, 0, baseDateStr), // 26 days (Next Month)
+      description: 'Audit cloud resource spending across AWS/GCP and negotiate enterprise volume renewals.',
+      deadline: getRelativeDateStr(24, 12, 0, baseDateStr), // 24 days
       difficulty: 'medium',
       questId: undefined,
       completed: false,
-      xpReward: 60,
-      goldReward: 40,
       tags: ['Finance'],
       createdAt: createdAtStr
     },
-
-    // Later / Distant Horizon
     {
-      id: 'task-12',
-      title: 'Marathon 42K Endurance Quest',
-      description: 'Conquer the full 42.195km endurance course and claim the Titan Medal.',
-      deadline: getRelativeDateStr(48, 7, 0, baseDateStr), // 48 days (Later)
-      difficulty: 'epic',
+      id: 'task-nm-3',
+      title: 'Half-Marathon 21K Milestone Checkpoint',
+      description: 'Run 21.1km distance simulation at target race pace to validate nutrition and hydration strategy.',
+      deadline: getRelativeDateStr(27, 7, 30, baseDateStr), // 27 days
+      difficulty: 'hard',
       questId: 'quest-3',
       completed: false,
-      xpReward: 350,
-      goldReward: 250,
-      tags: ['Endurance', 'Titan'],
+      tags: ['Athletics', 'Training'],
+      createdAt: createdAtStr
+    },
+    {
+      id: 'task-nm-4',
+      title: 'Publish API v2 Developer Documentation & SDKs',
+      description: 'Deploy auto-generated OpenAPI documentation portal and release official TypeScript client package.',
+      deadline: getRelativeDateStr(29, 18, 0, baseDateStr), // 29 days
+      difficulty: 'medium',
+      questId: 'quest-1',
+      completed: false,
+      tags: ['Docs', 'DeveloperExperience'],
       createdAt: createdAtStr
     },
 
-    // Already completed demo task
+    // ==========================================
+    // 5. LATER (30+ days out)
+    // ==========================================
+    {
+      id: 'task-lt-1',
+      title: 'Migrate Kubernetes Clusters to Managed Multi-Region',
+      description: 'Architect active-active geo-replicated container clusters with automated traffic failover.',
+      deadline: getRelativeDateStr(38, 15, 0, baseDateStr), // 38 days
+      difficulty: 'epic',
+      questId: 'quest-1',
+      completed: false,
+      tags: ['Infrastructure', 'Cloud'],
+      createdAt: createdAtStr
+    },
+    {
+      id: 'task-12',
+      title: 'Marathon 42K Endurance Run',
+      description: 'Complete the scheduled annual 42.195km road marathon under target finish time.',
+      deadline: getRelativeDateStr(48, 7, 0, baseDateStr), // 48 days
+      difficulty: 'epic',
+      questId: 'quest-3',
+      completed: false,
+      tags: ['Endurance', 'Personal'],
+      createdAt: createdAtStr
+    },
+    {
+      id: 'task-lt-2',
+      title: 'Annual SOC2 Type II Security Compliance Audit',
+      description: 'Engage third-party security auditor, furnish continuous evidence logs, and renew certification.',
+      deadline: getRelativeDateStr(56, 17, 0, baseDateStr), // 56 days
+      difficulty: 'hard',
+      questId: undefined,
+      completed: false,
+      tags: ['Compliance', 'Audit'],
+      createdAt: createdAtStr
+    },
+    {
+      id: 'task-lt-3',
+      title: 'Keynote Presentation at Global AI Summit',
+      description: 'Deliver 45-minute keynote address on memory-efficient foundation models and adaptive inference.',
+      deadline: getRelativeDateStr(68, 10, 0, baseDateStr), // 68 days
+      difficulty: 'epic',
+      questId: 'quest-2',
+      completed: false,
+      tags: ['Speaking', 'Conference'],
+      createdAt: createdAtStr
+    },
+    {
+      id: 'task-lt-4',
+      title: 'Design System v3 Next-Gen Component Overhaul',
+      description: 'Re-architect core component library using CSS variables, headless primitives, and WCAG AAA compliance.',
+      deadline: getRelativeDateStr(85, 16, 0, baseDateStr), // 85 days
+      difficulty: 'hard',
+      questId: 'quest-4',
+      completed: false,
+      tags: ['DesignSystem', 'Frontend'],
+      createdAt: createdAtStr
+    },
+
+    // ==========================================
+    // 6. COMPLETED (Historical Delivery Record)
+    // ==========================================
     {
       id: 'task-13',
-      title: 'Scaffold Heroic Next.js Foundation',
-      description: 'Initialize high-performance React Next.js structure and heroic design tokens.',
-      deadline: getRelativeDateStr(-1, 12, 0, baseDateStr),
+      title: 'Scaffold Core Application Foundation',
+      description: 'Initialize high-performance Next.js workspace structure, layout, and design system.',
+      deadline: getRelativeDateStr(-2, 12, 0, baseDateStr),
       difficulty: 'medium',
       questId: 'quest-1',
       completed: true,
-      completedAt: getRelativeDateStr(0, 10, 0, baseDateStr),
-      xpClaimed: true,
+      completedAt: getRelativeDateStr(-1, 10, 0, baseDateStr),
       notes: 'Initial React Next.js architecture setup verified and passing all unit checks.',
-      xpReward: 60,
-      goldReward: 30,
       tags: ['Code', 'Architecture'],
-      createdAt: getRelativeDateStr(-2, 9, 0, baseDateStr)
+      createdAt: getRelativeDateStr(-4, 9, 0, baseDateStr)
+    },
+    {
+      id: 'task-comp-2',
+      title: 'Implement Real-time Workload Radar Algorithm',
+      description: 'Write analytical horizon classification algorithm to flag deadline bottlenecks across horizons.',
+      deadline: getRelativeDateStr(-4, 15, 0, baseDateStr),
+      difficulty: 'hard',
+      questId: 'quest-1',
+      completed: true,
+      completedAt: getRelativeDateStr(-3, 16, 30, baseDateStr),
+      notes: 'Horizon threshold calculation and density warnings operational with comprehensive tests.',
+      tags: ['Analytics', 'Algorithm'],
+      createdAt: getRelativeDateStr(-6, 11, 0, baseDateStr)
+    },
+    {
+      id: 'task-comp-3',
+      title: 'Design Dark Mode Tokens & Glassmorphic CSS System',
+      description: 'Create custom token palette, card components, buttons, and responsive layout styling.',
+      deadline: getRelativeDateStr(-5, 18, 0, baseDateStr),
+      difficulty: 'medium',
+      questId: 'quest-4',
+      completed: true,
+      completedAt: getRelativeDateStr(-5, 14, 0, baseDateStr),
+      notes: 'Tokens defined in globals.css with high-contrast accessibility compliance.',
+      tags: ['Design', 'UI'],
+      createdAt: getRelativeDateStr(-8, 10, 0, baseDateStr)
+    },
+    {
+      id: 'task-comp-4',
+      title: 'Establish Team Sprint Cadence & GitHub Project Board',
+      description: 'Configure sprint review rituals, automated issue triage rules, and milestone tracking.',
+      deadline: getRelativeDateStr(-7, 12, 0, baseDateStr),
+      difficulty: 'easy',
+      questId: 'quest-1',
+      completed: true,
+      completedAt: getRelativeDateStr(-6, 17, 0, baseDateStr),
+      tags: ['Operations', 'Planning'],
+      createdAt: getRelativeDateStr(-10, 8, 0, baseDateStr)
+    },
+    {
+      id: 'task-comp-5',
+      title: 'Draft Transformer Attention Literature Review',
+      description: 'Survey 45 recent papers on sparse and cognitive attention models for foundation networks.',
+      deadline: getRelativeDateStr(-9, 17, 0, baseDateStr),
+      difficulty: 'hard',
+      questId: 'quest-2',
+      completed: true,
+      completedAt: getRelativeDateStr(-8, 15, 0, baseDateStr),
+      notes: 'Completed comprehensive taxonomy of linear and sparse attention mechanisms.',
+      tags: ['Research', 'Literature'],
+      createdAt: getRelativeDateStr(-14, 9, 0, baseDateStr)
     }
   ];
 
   return {
-    character: {
-      name: 'Lord Arthurian',
-      title: 'Bane of Procrastination',
-      characterClass: 'Chrono-Paladin',
-      avatar: '🛡️',
-      level: 4,
-      currentXp: 380,
-      maxXp: 600,
-      hp: 92,
-      maxHp: 100,
-      gold: 480,
-      tasksCompleted: 14,
-      streakDays: 5,
-      stats: {
-        discipline: 28, // Slaying Hard/Epic tasks
-        focus: 34,      // Deep work & knowledge
-        willpower: 24   // Consistency & timely clears
-      },
-      currentRealmId: 'realm-1'
-    },
     tasks,
     quests: [
       {
         id: 'quest-1',
-        title: 'Citadel Overhaul: Next-Gen Architecture',
-        description: 'Complete the mission-critical cloud platform modernization and hardening.',
-        color: '#f59e0b', // Gold / Amber
-        icon: '🏰',
+        title: 'Platform Infrastructure Modernization',
+        description: 'Complete mission-critical cloud platform modernization, microservices refactor, and security hardening.',
+        color: '#f59e0b', // Amber
+        icon: '📁',
         milestones: [
           { id: 'm-1', title: 'Refactor Core Microservices', completed: true },
           { id: 'm-2', title: 'Execute Distributed Database Sharding', completed: false },
-          { id: 'm-3', title: 'Full Executive RFC Approval', completed: false }
+          { id: 'm-3', title: 'Executive RFC Architecture Sign-off', completed: false }
         ],
-        bonusXp: 450,
-        bonusGold: 250,
         deadline: getRelativeDateStr(14, 18, 0, baseDateStr),
         completed: false
       },
       {
         id: 'quest-2',
-        title: 'Grimoire of Mastery: Deep Learning Synthesis',
-        description: 'Publish groundbreaking research paper on adaptive cognitive AI systems.',
-        color: '#8b5cf6', // Mystic Purple
-        icon: '📜',
+        title: 'Deep Learning Research & Publication',
+        description: 'Publish research paper on adaptive cognitive machine learning architectures.',
+        color: '#8b5cf6', // Purple
+        icon: '📝',
         milestones: [
           { id: 'm-4', title: 'Complete Transformer Literature Review', completed: true },
           { id: 'm-5', title: 'Run Extensive 1200-Test Benchmark', completed: false },
           { id: 'm-6', title: 'Camera-Ready IEEE Manuscript Delivery', completed: false }
         ],
-        bonusXp: 550,
-        bonusGold: 300,
         deadline: getRelativeDateStr(22, 18, 0, baseDateStr),
         completed: false
       },
       {
         id: 'quest-3',
-        title: 'Titan Conditioning: Physical Transcendence',
-        description: 'Elevate physical resilience and prepare for the 42K endurance trial.',
+        title: 'Endurance Training & Athletic Goal',
+        description: 'Maintain structured physical conditioning plan and prepare for the 42K marathon.',
         color: '#10b981', // Emerald
-        icon: '⚔️',
+        icon: '🎯',
         milestones: [
           { id: 'm-7', title: 'Establish 4-week Consistency Routine', completed: true },
           { id: 'm-8', title: 'Break 10km Tempo Barrier', completed: false },
-          { id: 'm-9', title: 'Conquer the 42.2km Marathon', completed: false }
+          { id: 'm-9', title: 'Complete 42.2km Marathon', completed: false }
         ],
-        bonusXp: 400,
-        bonusGold: 200,
         deadline: getRelativeDateStr(48, 18, 0, baseDateStr),
         completed: false
+      },
+      {
+        id: 'quest-4',
+        title: 'Design System Foundation & Tokens',
+        description: 'Establish cohesive typographic hierarchy, modern dark-mode palette, and accessible web primitives.',
+        color: '#3b82f6', // Blue
+        icon: '🎨',
+        milestones: [
+          { id: 'm-10', title: 'Audit Legacy UI Components & Dependencies', completed: true },
+          { id: 'm-11', title: 'Establish Design Tokens & Typography Scale', completed: true },
+          { id: 'm-12', title: 'Build Accessible Primitive Components', completed: true }
+        ],
+        deadline: getRelativeDateStr(-3, 18, 0, baseDateStr),
+        completed: true,
+        completedAt: getRelativeDateStr(-2, 16, 0, baseDateStr)
       }
     ],
-    equipment: [
-      {
-        id: 'eq-1',
-        name: 'Blade of Relentless Diligence',
-        slot: 'weapon',
-        rarity: 'rare',
-        statBonus: { discipline: 14, focus: 6 },
-        description: 'Forged from tempered obsidian and focus runes. Strikes down procrastination in a single blow.',
-        icon: '🗡️',
-        unlocked: true,
-        equipped: true,
-        unlockRequirement: 'Complete 5 Tasks on time'
-      },
-      {
-        id: 'eq-2',
-        name: 'Cuirass of the Focused Mind',
-        slot: 'armor',
-        rarity: 'epic',
-        statBonus: { willpower: 18, discipline: 8 },
-        description: 'Impenetrable plate armor that shields the champion from sensory distractions.',
-        icon: '🛡️',
-        unlocked: true,
-        equipped: true,
-        unlockRequirement: 'Maintain a 3-Day streak'
-      },
-      {
-        id: 'eq-3',
-        name: 'Crown of the Master Strategist',
-        slot: 'helm',
-        rarity: 'rare',
-        statBonus: { focus: 12 },
-        description: 'A circlet inlaid with sapphire chronocrystals that clarifies tactical planning.',
-        icon: '👑',
-        unlocked: true,
-        equipped: true,
-        unlockRequirement: 'Create your first 2 Quests'
-      },
-      {
-        id: 'eq-4',
-        name: 'Hourglass of Eternal Momentum',
-        slot: 'relic',
-        rarity: 'legendary',
-        statBonus: { focus: 15, discipline: 15, willpower: 15 },
-        description: 'Ancient artifact that accelerates temporal velocity. Earns +15% bonus XP on all quests.',
-        icon: '⏳',
-        unlocked: true,
-        equipped: true,
-        unlockRequirement: 'Reach Character Level 4'
-      },
-      {
-        id: 'eq-5',
-        name: 'Chrono-Scythe of Zero Procrastination',
-        slot: 'weapon',
-        rarity: 'legendary',
-        statBonus: { discipline: 30, focus: 18 },
-        description: 'Slices through overdue deadlines like parchment. An awe-inspiring weapon of the ancients.',
-        icon: '⚡',
-        unlocked: false,
-        equipped: false,
-        unlockRequirement: 'Complete 25 Total Tasks (Current: 14/25)',
-        progressPercent: 56
-      },
-      {
-        id: 'eq-6',
-        name: 'Dragonscale Aegis of Willpower',
-        slot: 'armor',
-        rarity: 'legendary',
-        statBonus: { willpower: 32, discipline: 12 },
-        description: 'Carved from the scales of the Ancient Chrono-Dragon. Immunity to deadline panic.',
-        icon: '🐉',
-        unlocked: false,
-        equipped: false,
-        unlockRequirement: 'Slay 3 Epic / Boss Tasks (Current: 1/3)',
-        progressPercent: 33
-      }
-    ],
-    titles: [
-      {
-        id: 'title-1',
-        name: 'Novice Adventurer',
-        rarity: 'common',
-        description: 'Awarded to every hero who takes their first step into the realm.',
-        unlocked: true,
-        active: false,
-        requirement: 'Join the guild'
-      },
-      {
-        id: 'title-2',
-        name: 'Bane of Procrastination',
-        rarity: 'rare',
-        description: 'Bestowed upon warriors who vanquish tasks with unwavering precision.',
-        unlocked: true,
-        active: true,
-        requirement: 'Complete 10 tasks before deadline'
-      },
-      {
-        id: 'title-3',
-        name: 'Lord of Milestones',
-        rarity: 'epic',
-        description: 'Champion who guides complex projects to victorious fruition.',
-        unlocked: true,
-        active: false,
-        requirement: 'Complete 1 Full Quest campaign'
-      },
-      {
-        id: 'title-4',
-        name: 'Chrono-Ascendant',
-        rarity: 'legendary',
-        description: 'Master of time itself. Workload surges bend to your iron will.',
-        unlocked: false,
-        active: false,
-        requirement: 'Reach Character Level 10'
-      }
-    ],
-    realms: [
-      {
-        id: 'realm-1',
-        name: 'The Obsidian Archives',
-        subtitle: 'Domain of Arcane Research',
-        description: 'Deep midnight library filled with glowing glyphs and timeless silence. Perfect for high-intensity cognitive focus.',
-        themeColor: '#6366f1',
-        ambientPerk: '+5% Bonus XP on Deep Work & Research Tasks',
-        bgGradient: 'radial-gradient(circle at 50% 0%, #1e1b4b 0%, #09090b 70%)',
-        unlocked: true,
-        active: true,
-        requirement: 'Unlocked by Default'
-      },
-      {
-        id: 'realm-2',
-        name: 'Citadel of Iron Discipline',
-        subtitle: 'Fortress of the Vanguard',
-        description: 'High stone ramparts overlooking the valley of triumph. Inspires unyielding resolve and aggressive task execution.',
-        themeColor: '#f59e0b',
-        ambientPerk: '+10% Bonus XP on Hard & Epic Boss Tasks',
-        bgGradient: 'radial-gradient(circle at 50% 0%, #451a03 0%, #09090b 75%)',
-        unlocked: true,
-        active: false,
-        requirement: 'Unlocked at Level 3'
-      },
-      {
-        id: 'realm-3',
-        name: 'The Astral Observatory',
-        subtitle: 'Sovereignty of Chronos',
-        description: 'A floating celestial platform where celestial bodies align with future milestones.',
-        themeColor: '#06b6d4',
-        ambientPerk: '+15% Gold reward on all Project Milestones',
-        bgGradient: 'radial-gradient(circle at 50% 0%, #083344 0%, #09090b 75%)',
-        unlocked: true,
-        active: false,
-        requirement: 'Unlocked at Level 4'
-      },
-      {
-        id: 'realm-4',
-        name: 'Sanctum of the Chrono-Dragon',
-        subtitle: 'Volcanic Crucible of Masters',
-        description: 'A legendary volcano chamber where procrastination is forged into raw power.',
-        themeColor: '#ef4444',
-        ambientPerk: '+25% Extra XP on all Epic Boss encounters',
-        bgGradient: 'radial-gradient(circle at 50% 0%, #450a0a 0%, #09090b 80%)',
-        unlocked: false,
-        active: false,
-        requirement: 'Defeat 5 Boss Tasks & Reach Level 6'
-      }
-    ]
   };
 }

@@ -38,11 +38,11 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
 
   if (!isOpen) return null;
 
-  const difficultyLevels: { key: TaskDifficulty; label: string; xp: number }[] = [
-    { key: 'easy', label: 'Easy', xp: 30 },
-    { key: 'medium', label: 'Medium', xp: 65 },
-    { key: 'hard', label: 'Hard', xp: 140 },
-    { key: 'epic', label: 'Epic', xp: 280 }
+  const difficultyLevels: { key: TaskDifficulty; label: string; desc: string }[] = [
+    { key: 'easy', label: 'Easy', desc: 'Low effort' },
+    { key: 'medium', label: 'Medium', desc: 'Standard' },
+    { key: 'hard', label: 'Hard', desc: 'High effort' },
+    { key: 'epic', label: 'Epic', desc: 'Major' }
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -60,7 +60,7 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
       deadline,
       difficulty,
       questId: questId || undefined,
-      tags: tags.length > 0 ? tags : ['Task']
+      tags: tags.length > 0 ? tags : ['General']
     });
 
     setTitle('');
@@ -128,7 +128,7 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
             </label>
             <textarea
               rows={2}
-              placeholder="Add details or acceptance criteria..."
+              placeholder="Add details, criteria, or context..."
               value={description}
               onChange={e => setDescription(e.target.value)}
               style={{
@@ -211,24 +211,25 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
               {difficultyLevels.map(item => {
                 const isSelected = difficulty === item.key;
                 return (
-                  <button
+                    <button
                     key={item.key}
                     type="button"
                     onClick={() => setDifficulty(item.key)}
                     style={{
-                      background: isSelected ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-                      border: isSelected ? '1px solid var(--accent-gold)' : '1px solid var(--border-subtle)',
+                      background: isSelected ? 'var(--brand-subtle)' : 'rgba(255, 255, 255, 0.03)',
+                      border: isSelected ? '1px solid var(--brand)' : '1px solid var(--border-subtle)',
                       borderRadius: 'var(--radius-sm)',
                       padding: '0.5rem 0.25rem',
                       textAlign: 'center',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
                     }}
                   >
                     <div style={{ fontSize: '0.76rem', fontWeight: 600, color: isSelected ? '#ffffff' : 'var(--text-secondary)' }}>
                       {item.label}
                     </div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--accent-gold)', marginTop: '0.15rem' }}>
-                      +{item.xp} XP
+                    <div style={{ fontSize: '0.68rem', color: isSelected ? 'var(--brand)' : 'var(--text-muted)', marginTop: '0.15rem' }}>
+                      {item.desc}
                     </div>
                   </button>
                 );
@@ -299,7 +300,7 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
               type="submit"
               className="btn btn-primary"
             >
-              Create Task
+              Create task
             </button>
           </div>
         </form>

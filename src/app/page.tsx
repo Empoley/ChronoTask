@@ -2,25 +2,47 @@
 
 import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
+import { useAuth } from '@/context/AuthContext';
 import { Header } from '@/components/Header';
-import { CharacterSheet } from '@/components/CharacterSheet';
+import { WorkspaceOverview } from '@/components/WorkspaceOverview';
 import { WorkloadRadar } from '@/components/WorkloadRadar';
 import { TaskList } from '@/components/TaskList';
 import { QuestList } from '@/components/QuestList';
-import { EquipmentVault } from '@/components/EquipmentVault';
 import { CreateTaskModal } from '@/components/CreateTaskModal';
 import { CreateQuestModal } from '@/components/CreateQuestModal';
-import { LevelUpModal } from '@/components/LevelUpModal';
-import { CheckSquare, FolderGit2, Trophy } from 'lucide-react';
+import { AuthGate } from '@/components/AuthGate';
+import { CheckSquare, FolderGit2, Loader2 } from 'lucide-react';
 
 export default function Home() {
+  const { user, isLoading } = useAuth();
   const { state, setFilterProximity } = useGame();
-  const [activeMainTab, setActiveMainTab] = useState<'tasks' | 'quests' | 'vault'>('tasks');
+  const [activeMainTab, setActiveMainTab] = useState<'tasks' | 'projects'>('tasks');
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isCreateQuestOpen, setIsCreateQuestOpen] = useState(false);
   const [taskTargetQuestId, setTaskTargetQuestId] = useState<string | undefined>(undefined);
 
-  const handleFocusHorizon = (horizon: 'today' | 'next_week' | 'next_month') => {
+  if (isLoading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg-main)',
+        flexDirection: 'column',
+        gap: '0.85rem'
+      }}>
+        <Loader2 size={26} className="spin" color="var(--brand)" />
+        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Connecting to workspace...</span>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthGate />;
+  }
+
+  const handleFocusHorizon = (horizon: 'today' | 'this_week' | 'next_week' | 'next_month') => {
     setActiveMainTab('tasks');
     setFilterProximity(horizon);
   };
@@ -60,14 +82,14 @@ export default function Home() {
         gap: '1.25rem',
         flex: 1
       }}>
-        {/* Top: Hero Profile & Workload Radar */}
+        {/* Top: Workspace Overview & Workload Radar */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(280px, 340px) 1fr',
           gap: '1rem',
           alignItems: 'stretch'
         }}>
-          <CharacterSheet onOpenArmoryTab={() => setActiveMainTab('vault')} />
+          <WorkspaceOverview />
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <WorkloadRadar onFocusHorizon={handleFocusHorizon} />
           </div>
@@ -79,51 +101,45 @@ export default function Home() {
           alignItems: 'center',
           justifyContent: 'space-between',
           borderBottom: '1px solid var(--border-subtle)',
-          paddingBottom: '0.5rem',
+          paddingBottom: '0',
           flexWrap: 'wrap',
           gap: '0.5rem'
         }}>
-          <div style={{ display: 'flex', gap: '0.25rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '-1px' }}>
             <button
               onClick={() => setActiveMainTab('tasks')}
-              className="btn"
-              style={{
-                background: activeMainTab === 'tasks' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                color: activeMainTab === 'tasks' ? '#ffffff' : 'var(--text-secondary)',
-                fontWeight: activeMainTab === 'tasks' ? 600 : 500,
-                fontSize: '0.82rem'
-              }}
+              className={`nav-tab ${activeMainTab === 'tasks' ? 'is-active' : ''}`}
             >
               <CheckSquare size={15} />
-              <span>Tasks ({pendingTasksCount})</span>
+              <span>Tasks</span>
+              <span style={{
+                fontSize: '0.72rem',
+                color: activeMainTab === 'tasks' ? '#ffffff' : 'var(--text-muted)',
+                background: activeMainTab === 'tasks' ? 'var(--brand-subtle)' : 'var(--bg-subtle)',
+                padding: '0.1rem 0.45rem',
+                borderRadius: '9999px',
+                border: activeMainTab === 'tasks' ? '1px solid var(--brand-border)' : '1px solid var(--border-subtle)'
+              }}>
+                {pendingTasksCount}
+              </span>
             </button>
 
             <button
-              onClick={() => setActiveMainTab('quests')}
-              className="btn"
-              style={{
-                background: activeMainTab === 'quests' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                color: activeMainTab === 'quests' ? '#ffffff' : 'var(--text-secondary)',
-                fontWeight: activeMainTab === 'quests' ? 600 : 500,
-                fontSize: '0.82rem'
-              }}
+              onClick={() => setActiveMainTab('projects')}
+              className={`nav-tab ${activeMainTab === 'projects' ? 'is-active' : ''}`}
             >
               <FolderGit2 size={15} />
-              <span>Projects ({state.quests.length})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveMainTab('vault')}
-              className="btn"
-              style={{
-                background: activeMainTab === 'vault' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                color: activeMainTab === 'vault' ? '#ffffff' : 'var(--text-secondary)',
-                fontWeight: activeMainTab === 'vault' ? 600 : 500,
-                fontSize: '0.82rem'
-              }}
-            >
-              <Trophy size={15} />
-              <span>Rewards ({state.equipment.filter(e => e.unlocked).length})</span>
+              <span>Projects</span>
+              <span style={{
+                fontSize: '0.72rem',
+                color: activeMainTab === 'projects' ? '#ffffff' : 'var(--text-muted)',
+                background: activeMainTab === 'projects' ? 'var(--brand-subtle)' : 'var(--bg-subtle)',
+                padding: '0.1rem 0.45rem',
+                borderRadius: '9999px',
+                border: activeMainTab === 'projects' ? '1px solid var(--brand-border)' : '1px solid var(--border-subtle)'
+              }}>
+                {state.quests.length}
+              </span>
             </button>
           </div>
         </div>
@@ -134,15 +150,11 @@ export default function Home() {
             <TaskList onOpenCreateTask={handleOpenStandardCreateTask} />
           )}
 
-          {activeMainTab === 'quests' && (
+          {activeMainTab === 'projects' && (
             <QuestList
               onOpenCreateQuest={() => setIsCreateQuestOpen(true)}
               onOpenCreateTaskForQuest={handleOpenCreateTaskForQuest}
             />
-          )}
-
-          {activeMainTab === 'vault' && (
-            <EquipmentVault />
           )}
         </div>
       </main>
@@ -157,8 +169,8 @@ export default function Home() {
         textAlign: 'center'
       }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <span>ChronoQuest</span>
-          <span>Interactive demonstrational state saved in localStorage.</span>
+          <span>ChronoTasks</span>
+          <span>Proactive workload radar & milestone delivery management.</span>
         </div>
       </footer>
 
@@ -173,8 +185,6 @@ export default function Home() {
         isOpen={isCreateQuestOpen}
         onClose={() => setIsCreateQuestOpen(false)}
       />
-
-      <LevelUpModal />
     </div>
   );
 }

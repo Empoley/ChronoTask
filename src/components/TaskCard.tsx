@@ -26,24 +26,21 @@ export function TaskCard({ task }: TaskCardProps) {
 
   const quest = task.questId ? state.quests.find(q => q.id === task.questId) : null;
 
-  // XP label: if XP was already claimed, show +0 XP Claimed!
-  const isXpClaimed = !!task.xpClaimed;
-
   const difficultyMeta: Record<string, { label: string; badgeClass: string }> = {
     easy: {
-      label: isXpClaimed ? 'Easy • Claimed (+0 XP)' : 'Easy • +30 XP',
+      label: 'Easy',
       badgeClass: 'badge-easy'
     },
     medium: {
-      label: isXpClaimed ? 'Medium • Claimed (+0 XP)' : 'Medium • +65 XP',
+      label: 'Medium',
       badgeClass: 'badge-medium'
     },
     hard: {
-      label: isXpClaimed ? 'Hard • Claimed (+0 XP)' : 'Hard • +140 XP',
+      label: 'Hard',
       badgeClass: 'badge-hard'
     },
     epic: {
-      label: isXpClaimed ? 'Epic • Claimed (+0 XP)' : 'Epic • +280 XP',
+      label: 'Epic',
       badgeClass: 'badge-epic'
     }
   };
@@ -68,29 +65,13 @@ export function TaskCard({ task }: TaskCardProps) {
   };
 
   return (
-    <div
-      className="clean-card"
-      style={{
-        padding: '0.9rem 1.15rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.65rem',
-        opacity: task.completed ? 0.6 : 1,
-        transition: 'all 0.15s ease'
-      }}
-    >
+    <div className={`task-item status-${proximity} ${task.completed ? 'is-completed' : ''}`}>
       {/* Main Row */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
         {/* Checkbox */}
         <button
           onClick={() => toggleTaskComplete(task.id)}
-          title={
-            task.completed
-              ? 'Mark incomplete (task will return to list; EXP cannot be claimed again)'
-              : isXpClaimed
-              ? 'Complete task (EXP already claimed previously: +0 XP)'
-              : `Complete task (+${task.xpReward} XP)`
-          }
+          title={task.completed ? 'Mark incomplete' : 'Mark complete'}
           style={{
             width: '20px',
             height: '20px',
@@ -130,7 +111,7 @@ export function TaskCard({ task }: TaskCardProps) {
               <span>{task.title}</span>
               {task.notes && (
                 <span title="Has progress notes" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                  <FileText size={12} color="var(--accent-gold)" />
+                  <FileText size={12} color="var(--brand)" />
                 </span>
               )}
             </h4>
@@ -144,7 +125,7 @@ export function TaskCard({ task }: TaskCardProps) {
                 style={{
                   padding: '0.2rem 0.4rem',
                   fontSize: '0.72rem',
-                  color: isExpanded ? 'var(--accent-gold)' : 'var(--text-muted)'
+                  color: isExpanded ? 'var(--brand)' : 'var(--text-muted)'
                 }}
               >
                 <FileText size={12} />
@@ -196,11 +177,8 @@ export function TaskCard({ task }: TaskCardProps) {
               {proximityLabels[proximity] || 'Scheduled'}
             </span>
 
-            {/* Difficulty & XP reward */}
-            <span
-              className={`badge ${diff.badgeClass}`}
-              title={isXpClaimed ? 'This task has already been completed before; no duplicate EXP will be granted.' : undefined}
-            >
+            {/* Difficulty rating */}
+            <span className={`badge ${diff.badgeClass}`}>
               {diff.label}
             </span>
 
@@ -228,11 +206,13 @@ export function TaskCard({ task }: TaskCardProps) {
               marginLeft: 'auto',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.25rem'
+              gap: '0.35rem'
             }}>
               <Calendar size={12} />
-              <span>{formatDeadline(task.deadline).split('•')[0]}</span>
-              <span>({relativeTime.text})</span>
+              <span>{formatDeadline(task.deadline)}</span>
+              <span style={{ color: relativeTime.isPast ? '#f87171' : 'var(--text-dim)' }}>
+                ({relativeTime.text})
+              </span>
             </span>
           </div>
         </div>
@@ -256,15 +236,9 @@ export function TaskCard({ task }: TaskCardProps) {
             color: 'var(--text-secondary)'
           }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 600 }}>
-              <FileText size={12} color="var(--accent-gold)" />
-              <span>Progress Notes</span>
+              <FileText size={12} color="var(--brand)" />
+              <span>Progress notes</span>
             </span>
-
-            {isXpClaimed && (
-              <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.7rem' }}>
-                * Completed previously: EXP already claimed
-              </span>
-            )}
           </div>
 
           <textarea
@@ -292,7 +266,7 @@ export function TaskCard({ task }: TaskCardProps) {
             {isSavedFeedback && (
               <span style={{ fontSize: '0.72rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                 <CheckCheck size={13} />
-                <span>Notes Saved</span>
+                <span>Notes saved</span>
               </span>
             )}
             <button
@@ -301,7 +275,7 @@ export function TaskCard({ task }: TaskCardProps) {
               style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem' }}
             >
               <Save size={12} />
-              <span>Save Notes</span>
+              <span>Save notes</span>
             </button>
           </div>
         </div>

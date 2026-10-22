@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useGame } from '@/context/GameContext';
-import { Sparkles, Volume2, VolumeX, RotateCcw, Plus, FolderPlus, Swords } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { CheckSquare, Volume2, VolumeX, RotateCcw, Plus, FolderPlus, FolderGit2, User as UserIcon, LogOut, Cloud } from 'lucide-react';
 
 interface HeaderProps {
   onOpenCreateTask: () => void;
@@ -10,8 +11,12 @@ interface HeaderProps {
 }
 
 export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
-  const { state, isSoundMuted, toggleSoundMuted, resetDemoData } = useGame();
-  const { character } = state;
+  const { state, isSoundMuted, toggleSoundMuted, resetDemoData, isCloudSynced } = useGame();
+  const { user, signOut, openAuthModal } = useAuth();
+  const { tasks, quests } = state;
+
+  const completedCount = tasks.filter(t => t.completed).length;
+  const totalTasks = tasks.length;
 
   return (
     <header style={{
@@ -38,25 +43,25 @@ export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
             width: '32px',
             height: '32px',
             borderRadius: '8px',
-            background: 'rgba(245, 158, 11, 0.15)',
-            border: '1px solid rgba(245, 158, 11, 0.3)',
+            background: 'var(--brand-subtle)',
+            border: '1px solid var(--brand-border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--accent-gold)'
+            color: 'var(--brand)'
           }}>
-            <Swords size={18} />
+            <CheckSquare size={17} />
           </div>
           <div>
             <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>
-              Chrono<span style={{ color: 'var(--accent-gold)' }}>Quest</span>
+              ChronoTasks
             </span>
           </div>
         </div>
 
-        {/* Hero Quick Stats */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-          {/* Level & XP Capsule */}
+        {/* Quick Stats & Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexWrap: 'wrap' }}>
+          {/* Completed capsule */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -67,16 +72,13 @@ export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
             borderRadius: 'var(--radius-md)',
             fontSize: '0.76rem'
           }}>
-            <span style={{ fontWeight: 700, color: 'var(--accent-gold)' }}>
-              Lvl {character.level}
-            </span>
-            <span style={{ color: 'var(--text-muted)' }}>•</span>
+            <CheckSquare size={13} color="var(--accent-green)" />
             <span style={{ color: 'var(--text-secondary)' }}>
-              {character.currentXp}/{character.maxXp} XP
+              <strong style={{ color: '#ffffff' }}>{completedCount}</strong>/{totalTasks} completed
             </span>
           </div>
 
-          {/* Gold */}
+          {/* Projects capsule */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -86,12 +88,53 @@ export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
             padding: '0.3rem 0.65rem',
             borderRadius: 'var(--radius-md)',
             fontSize: '0.76rem',
-            color: '#fde047',
-            fontWeight: 600
+            color: 'var(--text-secondary)'
           }}>
-            <span>🪙</span>
-            <span>{character.gold}g</span>
+            <FolderGit2 size={13} color="var(--brand)" />
+            <span style={{ color: '#ffffff', fontWeight: 600 }}>{quests.filter(q => !q.completed).length}</span>
+            <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>projects</span>
           </div>
+
+          {/* User Account / Auth Status */}
+          {user ? (
+            <div
+              title={isCloudSynced ? 'Realtime Cloud Connected' : 'Syncing...'}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                background: 'var(--bg-subtle)',
+                border: '1px solid var(--border-subtle)',
+                padding: '0.25rem 0.65rem',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.76rem'
+              }}
+            >
+              <Cloud size={13} color={isCloudSynced ? 'var(--accent-green)' : 'var(--accent-gold)'} />
+              <span style={{ color: '#ffffff', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user.email}
+              </span>
+              <button
+                onClick={signOut}
+                title="Sign out of account"
+                className="btn btn-ghost"
+                style={{ padding: '0.2rem', color: 'var(--text-muted)' }}
+              >
+                <LogOut size={13} />
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <button
+                onClick={() => openAuthModal('signin')}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.76rem', padding: '0.38rem 0.75rem' }}
+              >
+                <UserIcon size={13} />
+                <span>Sign in</span>
+              </button>
+            </div>
+          )}
 
           {/* Audio toggle */}
           <button
@@ -106,11 +149,11 @@ export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
           {/* Reset Demo button */}
           <button
             onClick={() => {
-              if (window.confirm('Reset demo state back to default data?')) {
+              if (window.confirm('Reset workspace back to default state?')) {
                 resetDemoData();
               }
             }}
-            title="Reset demo data"
+            title="Reset workspace"
             className="btn btn-ghost"
             style={{ padding: '0.35rem 0.6rem', fontSize: '0.74rem' }}
           >
@@ -118,14 +161,14 @@ export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
             Reset
           </button>
 
-          {/* Create Project / Quest */}
+          {/* Create Project */}
           <button
             onClick={onOpenCreateQuest}
             className="btn btn-secondary"
             style={{ fontSize: '0.78rem', padding: '0.42rem 0.8rem' }}
           >
             <FolderPlus size={14} />
-            <span>New Quest</span>
+            <span>New project</span>
           </button>
 
           {/* Create Task CTA */}
@@ -135,7 +178,7 @@ export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
             style={{ fontSize: '0.78rem', padding: '0.42rem 0.95rem' }}
           >
             <Plus size={15} strokeWidth={2.5} />
-            <span>New Task</span>
+            <span>New task</span>
           </button>
         </div>
       </div>

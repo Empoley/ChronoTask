@@ -72,7 +72,7 @@ export function formatDeadline(deadlineStr: string): string {
   const ampm = hours >= 12 ? 'PM' : 'AM';
   const displayHours = hours % 12 || 12;
 
-  return `${month} ${day}, ${year} • ${displayHours}:${minutes} ${ampm}`;
+  return `${month} ${day}, ${year}, ${displayHours}:${minutes} ${ampm}`;
 }
 
 /**
@@ -106,8 +106,15 @@ export function getRelativeTimeText(deadlineStr: string, refDate: Date = getCurr
   }
 }
 
+export const WORKLOAD_THRESHOLDS = {
+  today: 1,
+  this_week: 3,
+  next_week: 5,
+  next_month: 10
+};
+
 export interface HorizonAlert {
-  horizon: 'today' | 'next_week' | 'next_month';
+  horizon: 'today' | 'this_week' | 'next_week' | 'next_month';
   label: string;
   taskCount: number;
   threshold: number;
@@ -119,15 +126,17 @@ export interface ComprehensiveWorkloadAnalysis {
   hasAnyWarning: boolean;
   activeWarnings: HorizonAlert[];
   today: HorizonAlert;
+  thisWeek: HorizonAlert;
   nextWeek: HorizonAlert;
   nextMonth: HorizonAlert;
 }
 
 /**
- * Analyzes workload pressure across Today (threshold: 5+), Next Week (threshold: 5+), and Next Month (threshold: 10+).
+ * Analyzes workload pressure across Today, This Week, Next Week, and Next Month.
  */
 export function analyzeAllWorkloads(tasks: Task[], refDate: Date = getCurrentReferenceDate()): ComprehensiveWorkloadAnalysis {
   let todayCount = 0;
+  let thisWeekCount = 0;
   let nextWeekCount = 0;
   let nextMonthCount = 0;
 
@@ -137,6 +146,8 @@ export function analyzeAllWorkloads(tasks: Task[], refDate: Date = getCurrentRef
 
     if (proximity === 'today' || proximity === 'overdue') {
       todayCount++;
+    } else if (proximity === 'this_week') {
+      thisWeekCount++;
     } else if (proximity === 'next_week') {
       nextWeekCount++;
     } else if (proximity === 'next_month') {
@@ -146,33 +157,43 @@ export function analyzeAllWorkloads(tasks: Task[], refDate: Date = getCurrentRef
 
   const today: HorizonAlert = {
     horizon: 'today',
-    label: 'Today / Overdue',
+    label: 'Today',
     taskCount: todayCount,
-    threshold: 5,
-    isHighWorkload: todayCount >= 5,
-    message: `High workload today: ${todayCount} tasks due. Clear immediate tasks to stay on schedule.`
+    threshold: WORKLOAD_THRESHOLDS.today,
+    isHighWorkload: todayCount >= WORKLOAD_THRESHOLDS.today,
+    message: `High workload today: ${todayCount} ${todayCount === 1 ? 'task' : 'tasks'} due. Clear immediate tasks to stay on schedule.`
+  };
+
+  const thisWeek: HorizonAlert = {
+    horizon: 'this_week',
+    label: 'This Week',
+    taskCount: thisWeekCount,
+    threshold: WORKLOAD_THRESHOLDS.this_week,
+    isHighWorkload: thisWeekCount >= WORKLOAD_THRESHOLDS.this_week,
+    message: `High workload this week: ${thisWeekCount} tasks scheduled. Prioritize key items to stay ahead.`
   };
 
   const nextWeek: HorizonAlert = {
     horizon: 'next_week',
     label: 'Next Week',
     taskCount: nextWeekCount,
-    threshold: 5,
-    isHighWorkload: nextWeekCount >= 5,
-    message: `High workload next week: ${nextWeekCount} tasks scheduled. Clear tasks early to avoid a backlog.`
+    threshold: WORKLOAD_THRESHOLDS.next_week,
+    isHighWorkload: nextWeekCount >= WORKLOAD_THRESHOLDS.next_week,
+    message: `High workload next week: ${nextWeekCount} tasks scheduled. Clear tasks early to avoid a bottleneck.`
   };
 
   const nextMonth: HorizonAlert = {
     horizon: 'next_month',
     label: 'Next Month',
     taskCount: nextMonthCount,
-    threshold: 10,
-    isHighWorkload: nextMonthCount >= 10,
+    threshold: WORKLOAD_THRESHOLDS.next_month,
+    isHighWorkload: nextMonthCount >= WORKLOAD_THRESHOLDS.next_month,
     message: `High workload next month: ${nextMonthCount} tasks scheduled. Consider adjusting long-range milestones.`
   };
 
   const activeWarnings: HorizonAlert[] = [];
   if (today.isHighWorkload) activeWarnings.push(today);
+  if (thisWeek.isHighWorkload) activeWarnings.push(thisWeek);
   if (nextWeek.isHighWorkload) activeWarnings.push(nextWeek);
   if (nextMonth.isHighWorkload) activeWarnings.push(nextMonth);
 
@@ -180,6 +201,7 @@ export function analyzeAllWorkloads(tasks: Task[], refDate: Date = getCurrentRef
     hasAnyWarning: activeWarnings.length > 0,
     activeWarnings,
     today,
+    thisWeek,
     nextWeek,
     nextMonth
   };
@@ -201,8 +223,8 @@ export interface WorkloadAnalysis {
 export function analyzeNextWeekWorkload(tasks: Task[], refDate: Date = getCurrentReferenceDate()): WorkloadAnalysis {
   const nextWeekPendingTasks = tasks.filter(t => !t.completed && getTaskProximity(t.deadline, refDate) === 'next_week');
   const taskCount = nextWeekPendingTasks.length;
-  // Strictly only warn if there's 5 or more tasks
-  const isHighWorkload = taskCount >= 5;
+  // Strictly only warn if threshold reached
+  const isHighWorkload = taskCount >= WORKLOAD_THRESHOLDS.next_week;
 
   let totalDifficultyPoints = 0;
   let epicCount = 0;

@@ -15,18 +15,18 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [color, setColor] = useState('#8b5cf6');
-  const [icon, setIcon] = useState('📜');
+  const [icon, setIcon] = useState('📁');
   const [deadline, setDeadline] = useState('');
   const [milestones, setMilestones] = useState<string[]>([
     'Phase 1: Planning & Setup',
-    'Phase 2: Execution',
-    'Phase 3: Launch'
+    'Phase 2: Implementation',
+    'Phase 3: Review & Launch'
   ]);
 
   if (!isOpen) return null;
 
   const colorPresets = ['#f59e0b', '#8b5cf6', '#10b981', '#3b82f6', '#ec4899', '#ef4444'];
-  const iconPresets = ['📜', '🏰', '⚔️', '🔮', '🛡️', '💎', '🚀', '🎯'];
+  const iconPresets = ['📁', '🚀', '🎯', '📊', '⚡', '💡', '📝', '💼'];
 
   const handleAddMilestone = () => {
     setMilestones([...milestones, `Phase ${milestones.length + 1}: Final Review`]);
@@ -97,7 +97,7 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
             <input
               type="text"
               required
-              placeholder="e.g. Website Redesign or Thesis Grimoire"
+              placeholder="e.g. Website Redesign or Q4 Product Launch"
               value={title}
               onChange={e => setTitle(e.target.value)}
               style={{
@@ -120,7 +120,7 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
             </label>
             <textarea
               rows={2}
-              placeholder="What is the objective of this project?"
+              placeholder="What is the objective or scope of this project?"
               value={description}
               onChange={e => setDescription(e.target.value)}
               style={{
@@ -253,7 +253,7 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
               type="submit"
               className="btn btn-primary"
             >
-              Create Project
+              Create project
             </button>
           </div>
         </form>

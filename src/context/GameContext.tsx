@@ -1,17 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { GameState, Task, Quest, TaskDifficulty, Equipment, Title, RealmLocation } from '@/types/game';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
+import { GameState, Task, Quest, TaskDifficulty } from '@/types/game';
 import { getDefaultSeedData } from '@/data/seedData';
 import { sound } from '@/utils/audio';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from './AuthContext';
 
-const STORAGE_KEY = 'chrono_quest_game_state_v1';
-
-interface LevelUpEvent {
-  oldLevel: number;
-  newLevel: number;
-  unlockedFeatures: string[];
-}
+const STORAGE_KEY = 'chrono_tasks_app_state_v3';
 
 interface GameContextType {
   state: GameState;
@@ -35,68 +31,169 @@ interface GameContextType {
     deadline?: string;
   }) => void;
   toggleMilestone: (questId: string, milestoneId: string) => void;
-  equipItem: (itemId: string) => void;
-  setActiveTitle: (titleId: string) => void;
-  setActiveRealm: (realmId: string) => void;
+  toggleQuestComplete: (questId: string) => void;
+  deleteQuest: (questId: string) => void;
   resetDemoData: () => void;
-  levelUpModal: LevelUpEvent | null;
-  dismissLevelUpModal: () => void;
   isSoundMuted: boolean;
   toggleSoundMuted: () => void;
   filterProximity: string | null;
   setFilterProximity: (proximity: string | null) => void;
+  isCloudSynced: boolean;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [state, setState] = useState<GameState>(() => getDefaultSeedData());
   const [isLoaded, setIsLoaded] = useState(false);
-  const [levelUpModal, setLevelUpModal] = useState<LevelUpEvent | null>(null);
+  const [isCloudSynced, setIsCloudSynced] = useState(false);
   const [isSoundMuted, setIsSoundMuted] = useState(false);
   const [filterProximity, setFilterProximity] = useState<string | null>(null);
 
-  // Load state from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.character && parsed.tasks) {
-          setState(parsed);
-        }
-      }
-    } catch {
-      // Ignore parse errors, fallback to default seed
-    }
-    setIsLoaded(true);
-  }, []);
+  const userRef = useRef(user);
+  userRef.current = user;
 
-  // Save state to localStorage whenever state changes
+  // 1. Reset state when signed out; authenticate required
   useEffect(() => {
-    if (isLoaded) {
+    if (!user) {
+      setState({ tasks: [], quests: [] });
+      setIsLoaded(true);
+      setIsCloudSynced(false);
+    }
+  }, [user]);
+
+  // 3. Cloud Sync & Realtime Subscriptions for Authenticated Users
+  useEffect(() => {
+    if (!user) {
+      setIsCloudSynced(false);
+      return;
+    }
+
+    let isSubscribed = true;
+
+    const fetchCloudData = async () => {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch {
-        // quota exceeded or storage disabled
-      }
-    }
-  }, [state, isLoaded]);
+        const [tasksRes, questsRes] = await Promise.all([
+          supabase.from('tasks').select('*'),
+          supabase.from('projects').select('*')
+        ]);
 
-  const triggerConfetti = useCallback(async (isEpic: boolean = false) => {
+        if (!isSubscribed) return;
+
+        if (tasksRes.data && questsRes.data) {
+          // If first time user has 0 cloud records, populate with default seed
+          if (tasksRes.data.length === 0 && questsRes.data.length === 0) {
+            const seed = getDefaultSeedData();
+            await Promise.all([
+              supabase.from('projects').insert(
+                seed.quests.map(q => ({
+                  id: q.id,
+                  owner_id: user.id,
+                  title: q.title,
+                  description: q.description,
+                  color: q.color,
+                  icon: q.icon,
+                  milestones: q.milestones,
+                  deadline: q.deadline || null,
+                  completed: q.completed,
+                  completed_at: q.completedAt || null
+                }))
+              ),
+              supabase.from('tasks').insert(
+                seed.tasks.map(t => ({
+                  id: t.id,
+                  user_id: user.id,
+                  quest_id: t.questId || null,
+                  title: t.title,
+                  description: t.description,
+                  deadline: t.deadline,
+                  difficulty: t.difficulty,
+                  completed: t.completed,
+                  completed_at: t.completedAt || null,
+                  tags: t.tags,
+                  notes: t.notes || ''
+                }))
+              )
+            ]);
+
+            if (isSubscribed) {
+              setState(seed);
+              setIsCloudSynced(true);
+            }
+            return;
+          }
+
+          const mappedTasks: Task[] = tasksRes.data.map((t: any) => ({
+            id: t.id,
+            title: t.title,
+            description: t.description || '',
+            deadline: t.deadline,
+            difficulty: t.difficulty,
+            questId: t.quest_id || undefined,
+            completed: t.completed,
+            completedAt: t.completed_at,
+            tags: t.tags || ['General'],
+            notes: t.notes || '',
+            createdAt: t.created_at
+          }));
+
+          const mappedQuests: Quest[] = questsRes.data.map((q: any) => ({
+            id: q.id,
+            title: q.title,
+            description: q.description || '',
+            color: q.color || '#6366f1',
+            icon: q.icon || '📁',
+            milestones: q.milestones || [],
+            deadline: q.deadline || undefined,
+            completed: q.completed || false,
+            completedAt: q.completed_at
+          }));
+
+          setState({ tasks: mappedTasks, quests: mappedQuests });
+          setIsCloudSynced(true);
+        }
+      } catch (err) {
+        console.warn('Error syncing cloud data from Supabase:', err);
+      }
+    };
+
+    fetchCloudData();
+
+    // Subscribe to Realtime Postgres Changes
+    const channel = supabase
+      .channel('chrono_realtime_channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+        fetchCloudData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => {
+        fetchCloudData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'project_members' }, () => {
+        fetchCloudData();
+      })
+      .subscribe();
+
+    return () => {
+      isSubscribed = false;
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const triggerConfetti = useCallback(async (isMajor: boolean = false) => {
     try {
       const confetti = (await import('canvas-confetti')).default;
-      if (isEpic) {
+      if (isMajor) {
         confetti({
-          particleCount: 120,
-          spread: 80,
+          particleCount: 100,
+          spread: 75,
           origin: { y: 0.6 },
           colors: ['#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#3b82f6']
         });
       } else {
         confetti({
-          particleCount: 50,
-          spread: 60,
+          particleCount: 45,
+          spread: 55,
           origin: { y: 0.7 },
           colors: ['#f59e0b', '#3b82f6', '#10b981']
         });
@@ -114,67 +211,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Check achievement & item unlocks based on progression
-  const evaluateUnlocks = (
-    updatedState: GameState, 
-    newLevel: number, 
-    completedCount: number
-  ): { updatedEquipment: Equipment[]; updatedTitles: Title[]; updatedRealms: RealmLocation[]; newlyUnlocked: string[] } => {
-    const newlyUnlocked: string[] = [];
-
-    // Equipment unlocks
-    const updatedEquipment = updatedState.equipment.map(item => {
-      if (item.unlocked) return item;
-
-      let shouldUnlock = false;
-      if (item.id === 'eq-5' && completedCount >= 20) {
-        shouldUnlock = true;
-      } else if (item.id === 'eq-6' && newLevel >= 5) {
-        shouldUnlock = true;
-      }
-
-      if (shouldUnlock) {
-        newlyUnlocked.push(`Equipment: ${item.name}`);
-        return { ...item, unlocked: true, progressPercent: 100 };
-      }
-      return item;
-    });
-
-    // Title unlocks
-    const updatedTitles = updatedState.titles.map(title => {
-      if (title.unlocked) return title;
-
-      let shouldUnlock = false;
-      if (title.id === 'title-4' && newLevel >= 6) {
-        shouldUnlock = true;
-      }
-
-      if (shouldUnlock) {
-        newlyUnlocked.push(`Title: "${title.name}"`);
-        return { ...title, unlocked: true };
-      }
-      return title;
-    });
-
-    // Realm unlocks
-    const updatedRealms = updatedState.realms.map(realm => {
-      if (realm.unlocked) return realm;
-
-      let shouldUnlock = false;
-      if (realm.id === 'realm-4' && newLevel >= 5) {
-        shouldUnlock = true;
-      }
-
-      if (shouldUnlock) {
-        newlyUnlocked.push(`Realm: ${realm.name}`);
-        return { ...realm, unlocked: true };
-      }
-      return realm;
-    });
-
-    return { updatedEquipment, updatedTitles, updatedRealms, newlyUnlocked };
-  };
-
   const addTask = useCallback((data: {
     title: string;
     description: string;
@@ -183,20 +219,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     questId?: string;
     tags?: string[];
   }) => {
-    const xpRewards: Record<TaskDifficulty, number> = {
-      easy: 30,
-      medium: 65,
-      hard: 140,
-      epic: 280
-    };
-
-    const goldRewards: Record<TaskDifficulty, number> = {
-      easy: 15,
-      medium: 35,
-      hard: 75,
-      epic: 150
-    };
-
     const newTask: Task = {
       id: `task-${Date.now()}`,
       title: data.title.trim(),
@@ -205,9 +227,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       difficulty: data.difficulty,
       questId: data.questId || undefined,
       completed: false,
-      xpReward: xpRewards[data.difficulty] || 50,
-      goldReward: goldRewards[data.difficulty] || 25,
-      tags: data.tags && data.tags.length > 0 ? data.tags : ['Quest'],
+      tags: data.tags && data.tags.length > 0 ? data.tags : ['General'],
       createdAt: new Date().toISOString()
     };
 
@@ -215,6 +235,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ...prev,
       tasks: [newTask, ...prev.tasks]
     }));
+
+    if (userRef.current) {
+      supabase.from('tasks').insert({
+        id: newTask.id,
+        user_id: userRef.current.id,
+        quest_id: newTask.questId || null,
+        title: newTask.title,
+        description: newTask.description,
+        deadline: newTask.deadline,
+        difficulty: newTask.difficulty,
+        completed: false,
+        tags: newTask.tags,
+        notes: ''
+      }).then();
+    }
   }, []);
 
   const toggleTaskComplete = useCallback((taskId: string) => {
@@ -224,104 +259,30 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       const target = prev.tasks[taskIndex];
       const isNowCompleted = !target.completed;
-
-      // If unchecking, it goes back into tasks, but xpClaimed stays true so it won't award EXP again!
-      if (!isNowCompleted) {
-        const updatedTasks = [...prev.tasks];
-        updatedTasks[taskIndex] = {
-          ...target,
-          completed: false,
-          completedAt: undefined,
-          xpClaimed: true // Retained!
-        };
-
-        return {
-          ...prev,
-          tasks: updatedTasks
-        };
-      }
-
-      // MARKING COMPLETE: Check if XP was already claimed previously
-      const isAlreadyClaimed = !!target.xpClaimed;
-      const xpToAward = isAlreadyClaimed ? 0 : target.xpReward;
-      const goldToAward = isAlreadyClaimed ? 0 : target.goldReward;
+      const completedAt = isNowCompleted ? new Date().toISOString() : undefined;
 
       const updatedTasks = [...prev.tasks];
       updatedTasks[taskIndex] = {
         ...target,
-        completed: true,
-        completedAt: new Date().toISOString(),
-        xpClaimed: true
+        completed: isNowCompleted,
+        completedAt
       };
 
-      sound.playTaskComplete();
-      triggerConfetti(target.difficulty === 'epic');
-
-      // If XP was already claimed before, don't award EXP or level up
-      if (isAlreadyClaimed) {
-        return {
-          ...prev,
-          tasks: updatedTasks
-        };
+      if (isNowCompleted) {
+        sound.playTaskComplete();
+        triggerConfetti(target.difficulty === 'epic');
       }
 
-      // Fresh completion: award XP, stats, check level up
-      let disciplineDelta = target.difficulty === 'epic' ? 3 : target.difficulty === 'hard' ? 2 : 1;
-      let focusDelta = 1;
-      let willpowerDelta = 1;
-
-      let newCurrentXp = prev.character.currentXp + xpToAward;
-      let newLevel = prev.character.level;
-      let newMaxXp = prev.character.maxXp;
-      let didLevelUp = false;
-      const oldLevel = prev.character.level;
-
-      // Check level up threshold
-      while (newCurrentXp >= newMaxXp) {
-        newCurrentXp -= newMaxXp;
-        newLevel += 1;
-        newMaxXp = Math.floor(newLevel * 160 + 280);
-        didLevelUp = true;
-      }
-
-      const newTasksCompleted = prev.character.tasksCompleted + 1;
-
-      const { updatedEquipment, updatedTitles, updatedRealms, newlyUnlocked } = evaluateUnlocks(
-        prev,
-        newLevel,
-        newTasksCompleted
-      );
-
-      if (didLevelUp) {
-        sound.playLevelUp();
-        triggerConfetti(true);
-        setLevelUpModal({
-          oldLevel,
-          newLevel,
-          unlockedFeatures: newlyUnlocked
-        });
+      if (userRef.current) {
+        supabase.from('tasks').update({
+          completed: isNowCompleted,
+          completed_at: completedAt || null
+        }).eq('id', taskId).then();
       }
 
       return {
         ...prev,
-        tasks: updatedTasks,
-        equipment: updatedEquipment,
-        titles: updatedTitles,
-        realms: updatedRealms,
-        character: {
-          ...prev.character,
-          level: newLevel,
-          currentXp: newCurrentXp,
-          maxXp: newMaxXp,
-          hp: 100, // Replenish HP on task completion
-          gold: prev.character.gold + goldToAward,
-          tasksCompleted: newTasksCompleted,
-          stats: {
-            discipline: prev.character.stats.discipline + disciplineDelta,
-            focus: prev.character.stats.focus + focusDelta,
-            willpower: prev.character.stats.willpower + willpowerDelta
-          }
-        }
+        tasks: updatedTasks
       };
     });
   }, [triggerConfetti]);
@@ -331,6 +292,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ...prev,
       tasks: prev.tasks.map(t => t.id === taskId ? { ...t, notes } : t)
     }));
+
+    if (userRef.current) {
+      supabase.from('tasks').update({ notes }).eq('id', taskId).then();
+    }
   }, []);
 
   const deleteTask = useCallback((taskId: string) => {
@@ -338,6 +303,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ...prev,
       tasks: prev.tasks.filter(t => t.id !== taskId)
     }));
+
+    if (userRef.current) {
+      supabase.from('tasks').delete().eq('id', taskId).then();
+    }
   }, []);
 
   const addQuest = useCallback((data: {
@@ -352,8 +321,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       id: `quest-${Date.now()}`,
       title: data.title.trim(),
       description: data.description.trim(),
-      color: data.color || '#f59e0b',
-      icon: data.icon || '📜',
+      color: data.color || '#6366f1',
+      icon: data.icon || '📁',
       milestones: data.milestoneTitles
         .filter(t => t.trim().length > 0)
         .map((title, idx) => ({
@@ -361,8 +330,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
           title: title.trim(),
           completed: false
         })),
-      bonusXp: 350,
-      bonusGold: 200,
       deadline: data.deadline,
       completed: false
     };
@@ -371,6 +338,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ...prev,
       quests: [newQuest, ...prev.quests]
     }));
+
+    if (userRef.current) {
+      supabase.from('projects').insert({
+        id: newQuest.id,
+        owner_id: userRef.current.id,
+        title: newQuest.title,
+        description: newQuest.description,
+        color: newQuest.color,
+        icon: newQuest.icon,
+        milestones: newQuest.milestones,
+        deadline: newQuest.deadline || null,
+        completed: false
+      }).then();
+    }
   }, []);
 
   const toggleMilestone = useCallback((questId: string, milestoneId: string) => {
@@ -384,122 +365,89 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       const allDone = updatedMilestones.length > 0 && updatedMilestones.every(m => m.completed);
       const isQuestNewlyFinished = !quest.completed && allDone;
+      const completedAt = allDone ? new Date().toISOString() : undefined;
 
       const updatedQuest: Quest = {
         ...quest,
         milestones: updatedMilestones,
         completed: allDone,
-        completedAt: allDone ? new Date().toISOString() : undefined
+        completedAt
       };
 
       if (isQuestNewlyFinished) {
-        sound.playLevelUp();
+        sound.playTaskComplete();
         triggerConfetti(true);
       } else {
         sound.playTaskComplete();
       }
 
-      // Bonus rewards if quest completed
-      const bonusXp = isQuestNewlyFinished ? quest.bonusXp : 25;
-      const bonusGold = isQuestNewlyFinished ? quest.bonusGold : 10;
-
-      let newCurrentXp = prev.character.currentXp + bonusXp;
-      let newLevel = prev.character.level;
-      let newMaxXp = prev.character.maxXp;
-      let didLevelUp = false;
-      const oldLevel = prev.character.level;
-
-      while (newCurrentXp >= newMaxXp) {
-        newCurrentXp -= newMaxXp;
-        newLevel += 1;
-        newMaxXp = Math.floor(newLevel * 160 + 280);
-        didLevelUp = true;
-      }
-
-      if (didLevelUp) {
-        sound.playLevelUp();
-        triggerConfetti(true);
-        setLevelUpModal({
-          oldLevel,
-          newLevel,
-          unlockedFeatures: ['Quest Campaign Conquered: ' + quest.title]
-        });
+      if (userRef.current) {
+        supabase.from('projects').update({
+          milestones: updatedMilestones,
+          completed: allDone,
+          completed_at: completedAt || null
+        }).eq('id', questId).then();
       }
 
       return {
         ...prev,
-        quests: prev.quests.map(q => q.id === questId ? updatedQuest : q),
-        character: {
-          ...prev.character,
-          level: newLevel,
-          currentXp: newCurrentXp,
-          maxXp: newMaxXp,
-          gold: prev.character.gold + bonusGold
-        }
+        quests: prev.quests.map(q => q.id === questId ? updatedQuest : q)
       };
     });
   }, [triggerConfetti]);
 
-  const equipItem = useCallback((itemId: string) => {
-    sound.playEquipSound();
+  const toggleQuestComplete = useCallback((questId: string) => {
     setState(prev => {
-      const targetItem = prev.equipment.find(e => e.id === itemId);
-      if (!targetItem || !targetItem.unlocked) return prev;
+      const quest = prev.quests.find(q => q.id === questId);
+      if (!quest) return prev;
 
-      const slot = targetItem.slot;
-      const updatedEquipment = prev.equipment.map(item => {
-        if (item.slot === slot) {
-          return { ...item, equipped: item.id === itemId ? !item.equipped : false };
-        }
-        return item;
-      });
+      const isNowCompleted = !quest.completed;
+      const updatedMilestones = quest.milestones.map(m => ({
+        ...m,
+        completed: isNowCompleted
+      }));
+      const completedAt = isNowCompleted ? new Date().toISOString() : undefined;
+
+      const updatedQuest: Quest = {
+        ...quest,
+        completed: isNowCompleted,
+        completedAt,
+        milestones: updatedMilestones
+      };
+
+      if (isNowCompleted) {
+        sound.playTaskComplete();
+        triggerConfetti(true);
+      }
+
+      if (userRef.current) {
+        supabase.from('projects').update({
+          milestones: updatedMilestones,
+          completed: isNowCompleted,
+          completed_at: completedAt || null
+        }).eq('id', questId).then();
+      }
 
       return {
         ...prev,
-        equipment: updatedEquipment
+        quests: prev.quests.map(q => q.id === questId ? updatedQuest : q)
       };
     });
+  }, [triggerConfetti]);
+
+  const deleteQuest = useCallback((questId: string) => {
+    setState(prev => ({
+      ...prev,
+      quests: prev.quests.filter(q => q.id !== questId),
+      tasks: prev.tasks.map(t => t.questId === questId ? { ...t, questId: undefined } : t)
+    }));
+
+    if (userRef.current) {
+      supabase.from('projects').delete().eq('id', questId).then();
+    }
   }, []);
 
-  const setActiveTitle = useCallback((titleId: string) => {
-    setState(prev => {
-      const selected = prev.titles.find(t => t.id === titleId);
-      if (!selected || !selected.unlocked) return prev;
-
-      return {
-        ...prev,
-        titles: prev.titles.map(t => ({
-          ...t,
-          active: t.id === titleId
-        })),
-        character: {
-          ...prev.character,
-          title: selected.name
-        }
-      };
-    });
-  }, []);
-
-  const setActiveRealm = useCallback((realmId: string) => {
-    setState(prev => {
-      const selected = prev.realms.find(r => r.id === realmId);
-      if (!selected || !selected.unlocked) return prev;
-
-      return {
-        ...prev,
-        realms: prev.realms.map(r => ({
-          ...r,
-          active: r.id === realmId
-        })),
-        character: {
-          ...prev.character,
-          currentRealmId: realmId
-        }
-      };
-    });
-  }, []);
-
-  const resetDemoData = useCallback(() => {
+  const resetDemoData = useCallback(async () => {
     const defaultData = getDefaultSeedData();
     setState(defaultData);
     try {
@@ -507,10 +455,46 @@ export function GameProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore
     }
-  }, []);
 
-  const dismissLevelUpModal = useCallback(() => {
-    setLevelUpModal(null);
+    if (userRef.current) {
+      // Clean and reset cloud data for this user
+      await Promise.all([
+        supabase.from('tasks').delete().eq('user_id', userRef.current.id),
+        supabase.from('projects').delete().eq('owner_id', userRef.current.id)
+      ]);
+
+      await Promise.all([
+        supabase.from('projects').insert(
+          defaultData.quests.map(q => ({
+            id: q.id,
+            owner_id: userRef.current!.id,
+            title: q.title,
+            description: q.description,
+            color: q.color,
+            icon: q.icon,
+            milestones: q.milestones,
+            deadline: q.deadline || null,
+            completed: q.completed,
+            completed_at: q.completedAt || null
+          }))
+        ),
+        supabase.from('tasks').insert(
+          defaultData.tasks.map(t => ({
+            id: t.id,
+            user_id: userRef.current!.id,
+            quest_id: t.questId || null,
+            title: t.title,
+            description: t.description,
+            deadline: t.deadline,
+            difficulty: t.difficulty,
+            completed: t.completed,
+            completed_at: t.completedAt || null,
+            tags: t.tags,
+            notes: t.notes || ''
+          }))
+        )
+      ]);
+    }
   }, []);
 
   return (
@@ -523,16 +507,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
         deleteTask,
         addQuest,
         toggleMilestone,
-        equipItem,
-        setActiveTitle,
-        setActiveRealm,
+        toggleQuestComplete,
+        deleteQuest,
         resetDemoData,
-        levelUpModal,
-        dismissLevelUpModal,
         isSoundMuted,
         toggleSoundMuted,
         filterProximity,
-        setFilterProximity
+        setFilterProximity,
+        isCloudSynced
       }}
     >
       {children}

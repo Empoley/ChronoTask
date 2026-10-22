@@ -1,4 +1,4 @@
-// Web Audio API Synthesizer for RPG sounds - No external audio files needed
+// Web Audio API Synthesizer - Subtle audio chimes without external audio assets
 
 class SoundManager {
   private ctx: AudioContext | null = null;
@@ -39,7 +39,7 @@ class SoundManager {
     if (!ctx) return;
 
     const now = ctx.currentTime;
-    // Ascending victory chime: E5, G#5, B5, E6
+    // Pleasant ascending completion chime: E5, G#5, B5, E6
     const notes = [659.25, 830.61, 987.77, 1318.51];
 
     notes.forEach((freq, idx) => {
@@ -61,83 +61,12 @@ class SoundManager {
     });
   }
 
-  public playLevelUp() {
-    const ctx = this.getAudioContext();
-    if (!ctx) return;
-
-    const now = ctx.currentTime;
-    // Heroic fanfare chords: C4, E4, G4 -> F4, A4, C5 -> G4, B4, D5 -> C5, E5, G5, C6
-    const sequence = [
-      { notes: [261.63, 329.63, 392.0], duration: 0.18, start: 0 },
-      { notes: [349.23, 440.0, 523.25], duration: 0.18, start: 0.18 },
-      { notes: [392.0, 493.88, 587.33], duration: 0.22, start: 0.36 },
-      { notes: [523.25, 659.25, 783.99, 1046.5], duration: 0.65, start: 0.58 }
-    ];
-
-    sequence.forEach(chord => {
-      chord.notes.forEach(freq => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(freq, now + chord.start);
-
-        // Lowpass filter for warm brass sound
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(1400, now + chord.start);
-
-        gain.gain.setValueAtTime(0, now + chord.start);
-        gain.gain.linearRampToValueAtTime(0.12, now + chord.start + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + chord.start + chord.duration);
-
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(now + chord.start);
-        osc.stop(now + chord.start + chord.duration);
-      });
-    });
-  }
-
-  public playEquipSound() {
-    const ctx = this.getAudioContext();
-    if (!ctx) return;
-
-    const now = ctx.currentTime;
-    // Metallic resonant ring
-    const osc1 = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(1760, now);
-    osc1.frequency.exponentialRampToValueAtTime(880, now + 0.2);
-
-    osc2.type = 'triangle';
-    osc2.frequency.setValueAtTime(3520, now);
-    osc2.frequency.exponentialRampToValueAtTime(1760, now + 0.2);
-
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-
-    osc1.connect(gain);
-    osc2.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc1.start(now);
-    osc2.start(now);
-    osc1.stop(now + 0.4);
-    osc2.stop(now + 0.4);
-  }
-
   public playAlertHorn() {
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
-    // Low war horn pulse
+    // Low alert chime pulse
     [110, 164.81].forEach(freq => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();

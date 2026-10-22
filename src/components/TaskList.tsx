@@ -81,7 +81,7 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
   const tabs = [
     { key: null, label: 'All', count: counts.all },
     { key: 'today', label: 'Today', count: counts.today, isHighWorkload: workloads.today.isHighWorkload },
-    { key: 'this_week', label: 'This Week', count: counts.this_week, isHighWorkload: false },
+    { key: 'this_week', label: 'This Week', count: counts.this_week, isHighWorkload: workloads.thisWeek.isHighWorkload },
     { key: 'next_week', label: 'Next Week', count: counts.next_week, isHighWorkload: workloads.nextWeek.isHighWorkload },
     { key: 'next_month', label: 'Next Month', count: counts.next_month, isHighWorkload: workloads.nextMonth.isHighWorkload },
     { key: 'later', label: 'Later', count: counts.later, isHighWorkload: false },
@@ -102,7 +102,7 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.25rem',
+          gap: '0.35rem',
           flexWrap: 'wrap'
         }}>
           {tabs.map(tab => {
@@ -111,34 +111,32 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
               <button
                 key={tab.key ?? 'all'}
                 onClick={() => setFilterProximity(tab.key)}
-                className="btn"
-                style={{
-                  padding: '0.38rem 0.75rem',
-                  fontSize: '0.76rem',
-                  background: isSelected ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                  color: isSelected ? '#ffffff' : 'var(--text-secondary)',
-                  border: isSelected ? '1px solid var(--border-card)' : '1px solid transparent',
-                  position: 'relative'
-                }}
+                className={`proximity-tab ${isSelected ? 'is-active' : ''}`}
               >
                 <span>{tab.label}</span>
                 <span style={{
-                  fontSize: '0.7rem',
-                  color: isSelected ? 'var(--accent-gold)' : 'var(--text-muted)',
-                  marginLeft: '0.2rem'
+                  fontSize: '0.68rem',
+                  color: isSelected ? '#ffffff' : 'var(--text-muted)',
+                  background: isSelected ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                  padding: '0.08rem 0.38rem',
+                  borderRadius: '9999px',
+                  marginLeft: '0.15rem'
                 }}>
                   {tab.count}
                 </span>
 
-                {/* Subtle warning indicator for next week surge */}
+                {/* Warning indicator for high workload */}
                 {tab.isHighWorkload && (
-                  <span style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    background: '#f97316',
-                    marginLeft: '0.25rem'
-                  }} />
+                  <span
+                    title="High workload"
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      background: '#f97316',
+                      marginLeft: '0.2rem'
+                    }}
+                  />
                 )}
               </button>
             );
@@ -202,14 +200,14 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
           <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
             {filterProximity === 'next_week'
               ? 'No pending tasks scheduled for next week.'
-              : 'Add a new task to continue earning XP and leveling up.'}
+              : 'Add a new task to organize your schedule and milestones.'}
           </p>
           <button
             onClick={onOpenCreateTask}
             className="btn btn-primary"
           >
             <Plus size={14} />
-            <span>Create Task</span>
+            <span>Create task</span>
           </button>
         </div>
       ) : (
