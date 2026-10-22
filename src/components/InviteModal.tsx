@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
 import { Quest } from '@/types/game';
-import { X, UserPlus, Users, Trash2, Mail, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
+import { sendCollaborationInviteEmail } from '@/lib/emailService';
+import { X, UserPlus, Users, Trash2, Mail, Shield, CheckCircle2, AlertCircle, Send, Loader2 } from 'lucide-react';
 
 interface InviteModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export function InviteModal({ isOpen, onClose, quest }: InviteModalProps) {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
@@ -60,6 +62,7 @@ export function InviteModal({ isOpen, onClose, quest }: InviteModalProps) {
 
     setStatusMessage(null);
     setIsSubmitting(true);
+    const targetEmail = emailInput.trim().toLowerCase();
 
     try {
       if (user) {
@@ -67,34 +70,68 @@ export function InviteModal({ isOpen, onClose, quest }: InviteModalProps) {
           .from('project_members')
           .insert({
             project_id: quest.id,
-            user_email: emailInput.trim().toLowerCase(),
+            user_email: targetEmail,
             role,
             status: 'accepted'
           });
 
-        if (error) {
+        if (error && error.code !== '23505') {
           setStatusMessage({ type: 'error', text: error.message });
-        } else {
-          setStatusMessage({ type: 'success', text: `Invited ${emailInput} as ${role}.` });
-          setEmailInput('');
-          loadMembers();
+          setIsSubmitting(false);
+          return;
         }
+
+        // Send email invitation via EmailJS
+        const inviterName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'A team member';
+        const emailRes = await sendCollaborationInviteEmail({
+          toEmail: targetEmail,
+          projectName: quest.title,
+          inviterName,
+          role
+        });
+
+        if (emailRes.success) {
+          setStatusMessage({ type: 'success', text: `Invited ${targetEmail} and sent invitation email!` });
+        } else {
+          setStatusMessage({ type: 'error', text: `Added ${targetEmail} to team, but email delivery reported: ${emailRes.message}` });
+        }
+
+        setEmailInput('');
+        loadMembers();
       } else {
         // Local/guest preview simulation
         const fakeMember: Member = {
           id: `m-${Date.now()}`,
-          user_email: emailInput.trim(),
+          user_email: targetEmail,
           role,
           status: 'accepted'
         };
         setMembers(prev => [...prev, fakeMember]);
-        setStatusMessage({ type: 'success', text: `Invited ${emailInput} (Local workspace). Sign in to sync with cloud.` });
+        setStatusMessage({ type: 'success', text: `Invited ${targetEmail} (Local workspace). Sign in to sync with cloud.` });
         setEmailInput('');
       }
     } catch (err: any) {
       setStatusMessage({ type: 'error', text: err.message || 'Failed to send invite.' });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendEmail = async (targetEmail: string, memberRole: string) => {
+    setStatusMessage(null);
+    setResendingEmail(targetEmail);
+    const inviterName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'A team member';
+    const emailRes = await sendCollaborationInviteEmail({
+      toEmail: targetEmail,
+      projectName: quest.title,
+      inviterName,
+      role: memberRole as 'editor' | 'viewer'
+    });
+    setResendingEmail(null);
+    if (emailRes.success) {
+      setStatusMessage({ type: 'success', text: `Invitation email resent to ${targetEmail}!` });
+    } else {
+      setStatusMessage({ type: 'error', text: `Failed to send email: ${emailRes.message}` });
     }
   };
 
@@ -296,14 +333,32 @@ export function InviteModal({ isOpen, onClose, quest }: InviteModalProps) {
                   </span>
                 </div>
 
-                <button
-                  onClick={() => handleRemoveMember(member.id)}
-                  title="Remove collaborator"
-                  className="btn btn-ghost"
-                  style={{ padding: '0.2rem', color: 'var(--text-dim)' }}
-                >
-                  <Trash2 size={13} />
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <button
+                    type="button"
+                    disabled={resendingEmail === member.user_email}
+                    onClick={() => handleResendEmail(member.user_email, member.role)}
+                    title="Resend invitation email"
+                    className="btn btn-ghost"
+                    style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', color: 'var(--brand)' }}
+                  >
+                    {resendingEmail === member.user_email ? (
+                      <Loader2 size={12} className="spin" />
+                    ) : (
+                      <Send size={12} />
+                    )}
+                    <span>{resendingEmail === member.user_email ? 'Sending...' : 'Resend'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleRemoveMember(member.id)}
+                    title="Remove collaborator"
+                    className="btn btn-ghost"
+                    style={{ padding: '0.2rem', color: 'var(--text-dim)' }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
               </div>
             ))}
 
