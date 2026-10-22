@@ -2,12 +2,13 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  isSupabaseReady: boolean;
   isAuthModalOpen: boolean;
   authModalMode: 'signin' | 'signup';
   openAuthModal: (mode?: 'signin' | 'signup') => void;
@@ -27,10 +28,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setIsLoading(false);
+      return;
+    }
+
     // 1. Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setIsLoading(false);
+    }).catch(() => {
       setIsLoading(false);
     });
 
@@ -56,6 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    if (!isSupabaseConfigured) {
+      return { error: new Error('Supabase credentials are missing. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.') };
+    }
     const { error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password
@@ -64,6 +75,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, displayName?: string) => {
+    if (!isSupabaseConfigured) {
+      return { error: new Error('Supabase credentials are missing. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.') };
+    }
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -77,7 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    }
   }, []);
 
   return (
@@ -86,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         isLoading,
+        isSupabaseReady: isSupabaseConfigured,
         isAuthModalOpen,
         authModalMode,
         openAuthModal,

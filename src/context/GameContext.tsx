@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { GameState, Task, Quest, TaskDifficulty } from '@/types/game';
 import { getDefaultSeedData } from '@/data/seedData';
 import { sound } from '@/utils/audio';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { useAuth } from './AuthContext';
 
 const STORAGE_KEY = 'chrono_tasks_app_state_v3';
@@ -65,7 +65,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   // 3. Cloud Sync & Realtime Subscriptions for Authenticated Users
   useEffect(() => {
-    if (!user) {
+    if (!user || !isSupabaseConfigured) {
       setIsCloudSynced(false);
       return;
     }

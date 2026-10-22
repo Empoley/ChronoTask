@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Lock, Mail, User as UserIcon, Eye, EyeOff, AlertCircle, CheckCircle2, ShieldCheck, Users, BellRing, ArrowRight } from 'lucide-react';
 
 export function AuthGate() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, isSupabaseReady } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -92,6 +92,24 @@ export function AuthGate() {
           borderRadius: 'var(--radius-lg)',
           boxShadow: '0 20px 45px rgba(0, 0, 0, 0.55)'
         }}>
+          {!isSupabaseReady && (
+            <div style={{
+              background: 'rgba(249, 115, 22, 0.1)',
+              border: '1px solid rgba(249, 115, 22, 0.3)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '0.75rem 0.95rem',
+              marginBottom: '1.25rem',
+              fontSize: '0.76rem',
+              color: '#fed7aa',
+              lineHeight: 1.5
+            }}>
+              <div style={{ fontWeight: 600, color: '#fb923c', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <AlertCircle size={14} /> Missing .env.local Configuration
+              </div>
+              Create a <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.1rem 0.3rem', borderRadius: '3px' }}>.env.local</code> file in this project with your Supabase credentials to activate authentication.
+            </div>
+          )}
+
           {/* Mode Switcher */}
           <div style={{
             display: 'grid',
