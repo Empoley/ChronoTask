@@ -82,6 +82,54 @@ ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.project_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 
+-- ==============================================================================
+-- RLS HELPER FUNCTIONS (SECURITY DEFINER to completely eliminate RLS recursion)
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.is_project_owner(p_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.projects
+    WHERE id = p_id AND owner_id = auth.uid()
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_project_collaborator(p_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.project_members
+    WHERE project_id = p_id 
+      AND (user_id = auth.uid() OR lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')))
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_edit_project(p_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.projects
+    WHERE id = p_id AND owner_id = auth.uid()
+  ) OR EXISTS (
+    SELECT 1 FROM public.project_members
+    WHERE project_id = p_id 
+      AND (user_id = auth.uid() OR lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')))
+      AND role IN ('owner', 'editor')
+  );
+$$;
+
 -- Profiles RLS
 DROP POLICY IF EXISTS "Public profiles are readable by authenticated users" ON public.profiles;
 CREATE POLICY "Public profiles are readable by authenticated users"
@@ -101,11 +149,7 @@ CREATE POLICY "Projects viewable by owner or members"
   ON public.projects FOR SELECT
   TO authenticated
   USING (
-    owner_id = auth.uid() OR
-    id IN (
-      SELECT project_id FROM public.project_members
-      WHERE user_id = auth.uid() OR lower(user_email) = lower(auth.jwt()->>'email')
-    )
+    owner_id = auth.uid() OR public.is_project_collaborator(id)
   );
 
 DROP POLICY IF EXISTS "Projects insertable by owner" ON public.projects;
@@ -118,14 +162,7 @@ DROP POLICY IF EXISTS "Projects updatable by owner or editor members" ON public.
 CREATE POLICY "Projects updatable by owner or editor members"
   ON public.projects FOR UPDATE
   TO authenticated
-  USING (
-    owner_id = auth.uid() OR
-    id IN (
-      SELECT project_id FROM public.project_members
-      WHERE (user_id = auth.uid() OR lower(user_email) = lower(auth.jwt()->>'email'))
-        AND role IN ('owner', 'editor')
-    )
-  );
+  USING (public.can_edit_project(id));
 
 DROP POLICY IF EXISTS "Projects deletable by owner" ON public.projects;
 CREATE POLICY "Projects deletable by owner"
@@ -140,8 +177,8 @@ CREATE POLICY "Members readable by project collaborators"
   TO authenticated
   USING (
     user_id = auth.uid() OR
-    lower(user_email) = lower(auth.jwt()->>'email') OR
-    project_id IN (SELECT id FROM public.projects WHERE owner_id = auth.uid())
+    lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')) OR
+    public.is_project_owner(project_id)
   );
 
 DROP POLICY IF EXISTS "Members insertable by project owner" ON public.project_members;
@@ -149,7 +186,7 @@ CREATE POLICY "Members insertable by project owner"
   ON public.project_members FOR INSERT
   TO authenticated
   WITH CHECK (
-    project_id IN (SELECT id FROM public.projects WHERE owner_id = auth.uid())
+    public.is_project_owner(project_id)
   );
 
 DROP POLICY IF EXISTS "Members deletable by project owner or self" ON public.project_members;
@@ -158,8 +195,8 @@ CREATE POLICY "Members deletable by project owner or self"
   TO authenticated
   USING (
     user_id = auth.uid() OR
-    lower(user_email) = lower(auth.jwt()->>'email') OR
-    project_id IN (SELECT id FROM public.projects WHERE owner_id = auth.uid())
+    lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')) OR
+    public.is_project_owner(project_id)
   );
 
 -- Tasks RLS
@@ -169,12 +206,7 @@ CREATE POLICY "Tasks viewable by owner or project collaborators"
   TO authenticated
   USING (
     user_id = auth.uid() OR
-    (
-      quest_id IS NOT NULL AND quest_id IN (
-        SELECT project_id FROM public.project_members
-        WHERE user_id = auth.uid() OR lower(user_email) = lower(auth.jwt()->>'email')
-      )
-    )
+    (quest_id IS NOT NULL AND public.is_project_collaborator(quest_id))
   );
 
 DROP POLICY IF EXISTS "Tasks insertable by authenticated users" ON public.tasks;
@@ -183,13 +215,7 @@ CREATE POLICY "Tasks insertable by authenticated users"
   TO authenticated
   WITH CHECK (
     user_id = auth.uid() OR
-    (
-      quest_id IS NOT NULL AND quest_id IN (
-        SELECT project_id FROM public.project_members
-        WHERE (user_id = auth.uid() OR lower(user_email) = lower(auth.jwt()->>'email'))
-          AND role IN ('owner', 'editor')
-      )
-    )
+    (quest_id IS NOT NULL AND public.can_edit_project(quest_id))
   );
 
 DROP POLICY IF EXISTS "Tasks updatable by task owner or project editors" ON public.tasks;
@@ -198,13 +224,7 @@ CREATE POLICY "Tasks updatable by task owner or project editors"
   TO authenticated
   USING (
     user_id = auth.uid() OR
-    (
-      quest_id IS NOT NULL AND quest_id IN (
-        SELECT project_id FROM public.project_members
-        WHERE (user_id = auth.uid() OR lower(user_email) = lower(auth.jwt()->>'email'))
-          AND role IN ('owner', 'editor')
-      )
-    )
+    (quest_id IS NOT NULL AND public.can_edit_project(quest_id))
   );
 
 DROP POLICY IF EXISTS "Tasks deletable by task owner or project owner" ON public.tasks;
@@ -213,11 +233,7 @@ CREATE POLICY "Tasks deletable by task owner or project owner"
   TO authenticated
   USING (
     user_id = auth.uid() OR
-    (
-      quest_id IS NOT NULL AND quest_id IN (
-        SELECT id FROM public.projects WHERE owner_id = auth.uid()
-      )
-    )
+    (quest_id IS NOT NULL AND public.is_project_owner(quest_id))
   );
 
 -- Enable Realtime
