@@ -85,13 +85,9 @@ ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 -- ==============================================================================
 -- RLS HELPER FUNCTIONS (SECURITY DEFINER to completely eliminate RLS recursion)
 -- ==============================================================================
-DROP FUNCTION IF EXISTS public.is_project_owner(UUID);
-DROP FUNCTION IF EXISTS public.is_project_collaborator(UUID);
-DROP FUNCTION IF EXISTS public.can_edit_project(UUID);
-
-DROP FUNCTION IF EXISTS public.is_project_owner(TEXT);
-DROP FUNCTION IF EXISTS public.is_project_collaborator(TEXT);
-DROP FUNCTION IF EXISTS public.can_edit_project(TEXT);
+DROP FUNCTION IF EXISTS public.is_project_owner(UUID) CASCADE;
+DROP FUNCTION IF EXISTS public.is_project_collaborator(UUID) CASCADE;
+DROP FUNCTION IF EXISTS public.can_edit_project(UUID) CASCADE;
 
 CREATE OR REPLACE FUNCTION public.is_project_owner(p_id TEXT)
 RETURNS BOOLEAN
@@ -204,40 +200,48 @@ CREATE POLICY "Members readable by project collaborators"
   USING (
     user_id = auth.uid() OR
     lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')) OR
-    public.is_project_owner(project_id)
+    public.is_project_owner(project_id) OR
+    public.is_project_collaborator(project_id)
   );
 
 DROP POLICY IF EXISTS "Members insertable by project owner" ON public.project_members;
-CREATE POLICY "Members insertable by project owner"
+DROP POLICY IF EXISTS "Members insertable by project owner or editor" ON public.project_members;
+CREATE POLICY "Members insertable by project owner or editor"
   ON public.project_members FOR INSERT
   TO authenticated
   WITH CHECK (
-    public.is_project_owner(project_id)
+    public.is_project_owner(project_id) OR
+    public.can_edit_project(project_id)
   );
 
 DROP POLICY IF EXISTS "Members updatable by invited user or project owner" ON public.project_members;
-CREATE POLICY "Members updatable by invited user or project owner"
+DROP POLICY IF EXISTS "Members updatable by invited user or project collaborator" ON public.project_members;
+CREATE POLICY "Members updatable by invited user or project collaborator"
   ON public.project_members FOR UPDATE
   TO authenticated
   USING (
     user_id = auth.uid() OR
     lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')) OR
-    public.is_project_owner(project_id)
+    public.is_project_owner(project_id) OR
+    public.can_edit_project(project_id)
   )
   WITH CHECK (
     user_id = auth.uid() OR
     lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')) OR
-    public.is_project_owner(project_id)
+    public.is_project_owner(project_id) OR
+    public.can_edit_project(project_id)
   );
 
 DROP POLICY IF EXISTS "Members deletable by project owner or self" ON public.project_members;
-CREATE POLICY "Members deletable by project owner or self"
+DROP POLICY IF EXISTS "Members deletable by project collaborator or self" ON public.project_members;
+CREATE POLICY "Members deletable by project collaborator or self"
   ON public.project_members FOR DELETE
   TO authenticated
   USING (
     user_id = auth.uid() OR
     lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')) OR
-    public.is_project_owner(project_id)
+    public.is_project_owner(project_id) OR
+    public.can_edit_project(project_id)
   );
 
 -- Tasks RLS

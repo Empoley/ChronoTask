@@ -38,6 +38,7 @@ export interface Quest {
   deadline?: string;
   completed: boolean;
   completedAt?: string;
+  ownerId?: string;
 }
 
 export interface CollaborationInvite {

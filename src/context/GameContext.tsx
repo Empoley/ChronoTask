@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 import { GameState, Task, Quest, TaskDifficulty, CollaborationInvite } from '@/types/game';
-import { getDefaultSeedData } from '@/data/seedData';
+import { getDefaultSeedData, getSeedDataForUser } from '@/data/seedData';
 import { sound } from '@/utils/audio';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { useAuth } from './AuthContext';
@@ -128,10 +128,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setPendingInvites(myPendingInvites);
 
         if (tasksRes.data && questsRes.data) {
-          // If first time user has 0 cloud records, populate with default seed
-          if (tasksRes.data.length === 0 && questsRes.data.length === 0) {
-            const seed = getDefaultSeedData();
-            await Promise.all([
+          // If first time user has 0 projects in cloud, populate with user-scoped seed data
+          if (questsRes.data.length === 0) {
+            const seed = getSeedDataForUser(user.id);
+            const [projRes, taskRes] = await Promise.all([
               supabase.from('projects').insert(
                 seed.quests.map(q => ({
                   id: q.id,
@@ -146,22 +146,31 @@ export function GameProvider({ children }: { children: ReactNode }) {
                   completed_at: q.completedAt || null
                 }))
               ),
-              supabase.from('tasks').insert(
-                seed.tasks.map(t => ({
-                  id: t.id,
-                  user_id: user.id,
-                  quest_id: t.questId || null,
-                  title: t.title,
-                  description: t.description,
-                  deadline: t.deadline,
-                  difficulty: t.difficulty,
-                  completed: t.completed,
-                  completed_at: t.completedAt || null,
-                  tags: t.tags,
-                  notes: t.notes || ''
-                }))
-              )
+              tasksRes.data.length === 0
+                ? supabase.from('tasks').insert(
+                    seed.tasks.map(t => ({
+                      id: t.id,
+                      user_id: user.id,
+                      quest_id: t.questId || null,
+                      title: t.title,
+                      description: t.description,
+                      deadline: t.deadline,
+                      difficulty: t.difficulty,
+                      completed: t.completed,
+                      completed_at: t.completedAt || null,
+                      tags: t.tags,
+                      notes: t.notes || ''
+                    }))
+                  )
+                : Promise.resolve({ error: null })
             ]);
+
+            if (projRes.error) {
+              console.error('Error inserting initial user projects:', projRes.error);
+            }
+            if (taskRes.error) {
+              console.error('Error inserting initial user tasks:', taskRes.error);
+            }
 
             if (isSubscribed) {
               setState(seed);
@@ -184,6 +193,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
             .filter((q: any) => q.owner_id === user.id || acceptedProjectIds.has(q.id))
             .map((q: any) => ({
               id: q.id,
+              ownerId: q.owner_id,
               title: q.title,
               description: q.description || '',
               color: q.color || '#6366f1',
@@ -397,7 +407,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
           completed: false
         })),
       deadline: data.deadline,
-      completed: false
+      completed: false,
+      ownerId: userRef.current?.id
     };
 
     setState(prev => ({
@@ -514,10 +525,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetDemoData = useCallback(async () => {
-    const defaultData = getDefaultSeedData();
-    setState(defaultData);
+    const userSeed = userRef.current ? getSeedDataForUser(userRef.current.id) : getDefaultSeedData();
+    setState(userSeed);
+
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(userSeed));
     } catch {
       // ignore
     }
@@ -531,7 +543,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       await Promise.all([
         supabase.from('projects').insert(
-          defaultData.quests.map(q => ({
+          userSeed.quests.map(q => ({
             id: q.id,
             owner_id: userRef.current!.id,
             title: q.title,
@@ -545,7 +557,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           }))
         ),
         supabase.from('tasks').insert(
-          defaultData.tasks.map(t => ({
+          userSeed.tasks.map(t => ({
             id: t.id,
             user_id: userRef.current!.id,
             quest_id: t.questId || null,

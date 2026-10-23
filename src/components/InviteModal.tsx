@@ -84,6 +84,11 @@ export function InviteModal({ isOpen, onClose, quest }: InviteModalProps) {
         if (error) {
           if (error.code === '23505') {
             setStatusMessage({ type: 'error', text: `${targetEmail} has already been invited or is already a member.` });
+          } else if (error.message.includes('row-level security') || error.code === '42501') {
+            setStatusMessage({
+              type: 'error',
+              text: 'Permission denied: only the project owner or editors can invite collaborators. Please ensure schema.sql has been executed in the Supabase SQL Editor and that the project is synced to your cloud account.'
+            });
           } else {
             setStatusMessage({ type: 'error', text: error.message });
           }

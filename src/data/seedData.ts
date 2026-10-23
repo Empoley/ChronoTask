@@ -491,3 +491,34 @@ export function getDefaultSeedData(baseDateStr: string = STATIC_BASE_TIME): Game
     ],
   };
 }
+
+/**
+ * Returns seed data uniquely scoped to a specific user to prevent primary key
+ * collisions in multi-user databases like Supabase.
+ */
+export function getSeedDataForUser(userId?: string, baseDateStr: string = STATIC_BASE_TIME): GameState {
+  const base = getDefaultSeedData(baseDateStr);
+  if (!userId) return base;
+
+  const userSuffix = userId.replace(/-/g, '').slice(0, 8);
+  const questIdMap: Record<string, string> = {};
+
+  const quests = base.quests.map((q, idx) => {
+    const newId = `q-${userSuffix}-${idx + 1}`;
+    questIdMap[q.id] = newId;
+    return {
+      ...q,
+      id: newId,
+      ownerId: userId
+    };
+  });
+
+  const tasks = base.tasks.map((t, idx) => ({
+    ...t,
+    id: `t-${userSuffix}-${idx + 1}`,
+    questId: t.questId ? (questIdMap[t.questId] || t.questId) : undefined
+  }));
+
+  return { tasks, quests };
+}
+
