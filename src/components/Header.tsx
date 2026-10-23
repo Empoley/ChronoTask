@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { useAuth } from '@/context/AuthContext';
-import { CheckSquare, Volume2, VolumeX, RotateCcw, Plus, FolderPlus, FolderGit2, User as UserIcon, LogOut, Cloud, Mail } from 'lucide-react';
+import { CheckSquare, Volume2, VolumeX, Plus, FolderPlus, FolderGit2, User as UserIcon, LogOut, Cloud, Mail } from 'lucide-react';
 import { CollaborationInvitesPopover } from './CollaborationInvitesPopover';
 
 interface HeaderProps {
@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
-  const { state, pendingInvites, isSoundMuted, toggleSoundMuted, resetDemoData, isCloudSynced } = useGame();
+  const { state, pendingInvites, isSoundMuted, toggleSoundMuted, isCloudSynced } = useGame();
   const { user, signOut, openAuthModal } = useAuth();
   const [isInvitesOpen, setIsInvitesOpen] = useState(false);
   const { tasks, quests } = state;
@@ -139,21 +139,6 @@ export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
             style={{ padding: '0.35rem', borderRadius: 'var(--radius-sm)' }}
           >
             {isSoundMuted ? <VolumeX size={14} color="var(--text-muted)" /> : <Volume2 size={14} color="var(--text-secondary)" />}
-          </button>
-
-          {/* Reset button (discreet) */}
-          <button
-            onClick={() => {
-              if (window.confirm('Reset workspace back to default state?')) {
-                resetDemoData();
-              }
-            }}
-            title="Reset demo data"
-            className="btn btn-ghost"
-            style={{ padding: '0.3rem 0.5rem', fontSize: '0.74rem', color: 'var(--text-muted)' }}
-          >
-            <RotateCcw size={12} style={{ marginRight: '0.2rem' }} />
-            <span>Reset</span>
           </button>
 
           {/* User Account / Auth Capsule */}

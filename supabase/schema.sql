@@ -305,3 +305,13 @@ BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.project_members;
   END IF;
 END $$;
+
+-- ==============================================================================
+-- TABULA RASA (Clean Slate Reset)
+-- To wipe all user tasks, project memberships, and projects for a clean slate,
+-- execute the following statements in the Supabase SQL Editor:
+-- ==============================================================================
+-- TRUNCATE TABLE public.tasks CASCADE;
+-- TRUNCATE TABLE public.project_members CASCADE;
+-- TRUNCATE TABLE public.projects CASCADE;
+
