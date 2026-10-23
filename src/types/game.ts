@@ -15,6 +15,7 @@ export interface Task {
   deadline: string; // ISO string e.g. '2026-10-17T18:00'
   difficulty: TaskDifficulty;
   questId?: string; // Associated project
+  milestoneId?: string; // Associated milestone within project
   completed: boolean;
   completedAt?: string;
   tags: string[];
@@ -26,6 +27,7 @@ export interface QuestMilestone {
   id: string;
   title: string;
   completed: boolean;
+  taskIds?: string[];
 }
 
 export interface Quest {

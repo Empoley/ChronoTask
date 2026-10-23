@@ -1,5 +1,5 @@
 :root {
-  /* ChronoTasks Precision Studio Tokens */
+  /* ChronoTasks Precision Studio Tokens - Dark Default */
   --bg-page: #080a0f;
   --bg-surface: #0e121a;
   --bg-card: rgba(16, 21, 30, 0.78);
@@ -32,6 +32,7 @@
 
   /* Typographic Contrast */
   --text-main: #f8fafc;
+  --heading-color: #ffffff;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   --text-dim: #475569;
@@ -42,6 +43,13 @@
   --border-card-hover: rgba(255, 255, 255, 0.16);
   --border-focus: rgba(99, 102, 241, 0.55);
 
+  /* Inputs, Surfaces & Header */
+  --input-bg: rgba(255, 255, 255, 0.04);
+  --input-border: rgba(255, 255, 255, 0.1);
+  --header-bg: rgba(8, 10, 15, 0.85);
+  --color-scheme: dark;
+  --milestone-drawer-bg: rgba(12, 16, 24, 0.85);
+
   /* Clean elevation without muddy shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 6px 18px -2px rgba(0, 0, 0, 0.5);
@@ -51,6 +59,58 @@
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
+}
+
+[data-theme='light'] {
+  /* Light Mode Precision Studio Tokens */
+  --bg-page: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-card-hover: #ffffff;
+  --bg-subtle: rgba(15, 23, 42, 0.04);
+  --bg-subtle-hover: rgba(15, 23, 42, 0.08);
+
+  --brand: #4f46e5;
+  --brand-hover: #4338ca;
+  --brand-subtle: rgba(79, 70, 229, 0.1);
+  --brand-border: rgba(79, 70, 229, 0.28);
+
+  --accent-time: #d97706;
+  --accent-time-hover: #b45309;
+  --accent-time-subtle: rgba(217, 119, 6, 0.1);
+  --accent-time-border: rgba(217, 119, 6, 0.25);
+
+  --accent-green: #059669;
+  --accent-green-subtle: rgba(5, 150, 105, 0.1);
+  --accent-green-border: rgba(5, 150, 105, 0.25);
+
+  --accent-red: #dc2626;
+  --accent-red-subtle: rgba(220, 38, 38, 0.1);
+  --accent-red-border: rgba(220, 38, 38, 0.25);
+
+  --accent-blue: #2563eb;
+  --accent-blue-subtle: rgba(37, 99, 235, 0.1);
+
+  --text-main: #0f172a;
+  --heading-color: #020617;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-card: rgba(15, 23, 42, 0.11);
+  --border-card-hover: rgba(15, 23, 42, 0.22);
+  --border-focus: rgba(79, 70, 229, 0.6);
+
+  --input-bg: #ffffff;
+  --input-border: rgba(15, 23, 42, 0.14);
+  --header-bg: rgba(255, 255, 255, 0.88);
+  --color-scheme: light;
+  --milestone-drawer-bg: rgba(241, 245, 249, 0.9);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
 }
 
 * {
@@ -73,13 +133,20 @@ body {
     radial-gradient(ellipse 60% 35% at 50% -5%, rgba(99, 102, 241, 0.06), transparent),
     radial-gradient(ellipse 40% 25% at 85% 10%, rgba(245, 158, 11, 0.03), transparent);
   background-attachment: fixed;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+[data-theme='light'] body {
+  background-image: 
+    radial-gradient(ellipse 60% 35% at 50% -5%, rgba(79, 70, 229, 0.05), transparent),
+    radial-gradient(ellipse 40% 25% at 85% 10%, rgba(217, 119, 6, 0.03), transparent);
 }
 
 /* Headings */
 h1, h2, h3, h4, h5 {
   font-weight: 600;
   letter-spacing: -0.015em;
-  color: #ffffff;
+  color: var(--heading-color);
   line-height: 1.25;
 }
 
@@ -413,4 +480,92 @@ h1, h2, h3, h4, h5 {
 
 .invite-badge-pulse {
   animation: invitePulse 2.4s infinite ease-in-out;
+}
+
+/* ==============================================================================
+   Milestones & Dropdown Task Views
+   ============================================================================== */
+.milestone-container {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  transition: all 0.15s ease;
+  overflow: hidden;
+}
+
+.milestone-container:hover {
+  border-color: var(--border-card-hover);
+}
+
+.milestone-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s ease;
+}
+
+.milestone-header-row:hover {
+  background: var(--bg-subtle-hover);
+}
+
+.milestone-task-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.08rem 0.42rem;
+  border-radius: 9999px;
+  background: var(--brand-subtle);
+  color: var(--brand);
+  border: 1px solid var(--brand-border);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.milestone-task-badge.is-zero {
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border-color: var(--border-subtle);
+}
+
+.milestone-task-badge.is-completed {
+  background: var(--accent-green-subtle);
+  color: var(--accent-green);
+  border-color: var(--accent-green-border);
+}
+
+.milestone-drawer {
+  background: var(--milestone-drawer-bg);
+  border-top: 1px solid var(--border-subtle);
+  padding: 0.5rem 0.65rem 0.6rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  animation: fadeInDown 0.15s ease-out;
+}
+
+.milestone-task-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.38rem 0.55rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.76rem;
+  transition: all 0.12s ease;
+}
+
+.milestone-task-card:hover {
+  border-color: var(--border-card-hover);
+  background: var(--bg-card-hover);
+}
+
+.milestone-task-card.is-done {
+  opacity: 0.6;
 }

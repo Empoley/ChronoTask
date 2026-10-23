@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { useAuth } from '@/context/AuthContext';
-import { CheckSquare, Volume2, VolumeX, Plus, FolderPlus, FolderGit2, User as UserIcon, LogOut, Cloud, Mail } from 'lucide-react';
+import { useTheme } from '@/context/ThemeContext';
+import { CheckSquare, Volume2, VolumeX, Plus, FolderPlus, FolderGit2, User as UserIcon, LogOut, Cloud, Mail, Sun, Moon } from 'lucide-react';
 import { CollaborationInvitesPopover } from './CollaborationInvitesPopover';
 
 interface HeaderProps {
@@ -14,6 +15,7 @@ interface HeaderProps {
 export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
   const { state, pendingInvites, isSoundMuted, toggleSoundMuted, isCloudSynced } = useGame();
   const { user, signOut, openAuthModal } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [isInvitesOpen, setIsInvitesOpen] = useState(false);
   const { tasks, quests } = state;
 
@@ -24,12 +26,13 @@ export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
   return (
     <header style={{
       borderBottom: '1px solid var(--border-subtle)',
-      background: 'rgba(8, 10, 15, 0.85)',
+      background: 'var(--header-bg)',
       backdropFilter: 'blur(16px)',
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      padding: '0.65rem 1.5rem'
+      padding: '0.65rem 1.5rem',
+      transition: 'background-color 0.2s ease, border-color 0.2s ease'
     }}>
       <div style={{
         maxWidth: '1280px',
@@ -56,7 +59,7 @@ export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
             }}>
               <CheckSquare size={16} />
             </div>
-            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>
+            <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--heading-color)', letterSpacing: '-0.02em' }}>
               ChronoTasks
             </span>
           </div>
@@ -71,12 +74,12 @@ export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
           {/* Quiet Status Counters */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-              <strong style={{ color: '#ffffff', fontVariantNumeric: 'tabular-nums' }}>{completedCount}</strong>
+              <strong style={{ color: 'var(--heading-color)', fontVariantNumeric: 'tabular-nums' }}>{completedCount}</strong>
               <span style={{ color: 'var(--text-muted)' }}>/ {totalTasks} done</span>
             </span>
             <span style={{ color: 'var(--text-dim)' }}>·</span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-              <strong style={{ color: '#ffffff', fontVariantNumeric: 'tabular-nums' }}>{activeProjectsCount}</strong>
+              <strong style={{ color: 'var(--heading-color)', fontVariantNumeric: 'tabular-nums' }}>{activeProjectsCount}</strong>
               <span style={{ color: 'var(--text-muted)' }}>active {activeProjectsCount === 1 ? 'project' : 'projects'}</span>
             </span>
           </div>
@@ -130,6 +133,20 @@ export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
               />
             </div>
           )}
+
+          {/* Theme toggle (Light / Dark mode) */}
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="btn btn-ghost"
+            style={{ padding: '0.35rem', borderRadius: 'var(--radius-sm)' }}
+          >
+            {theme === 'dark' ? (
+              <Sun size={15} color="var(--accent-time)" />
+            ) : (
+              <Moon size={15} color="var(--brand)" />
+            )}
+          </button>
 
           {/* Audio toggle */}
           <button

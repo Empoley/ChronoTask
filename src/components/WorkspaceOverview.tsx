@@ -48,7 +48,7 @@ export function WorkspaceOverview() {
           </div>
 
           <div>
-            <h3 style={{ fontSize: '0.92rem', fontWeight: 600, color: '#ffffff', margin: 0 }}>
+            <h3 style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--heading-color)', margin: 0 }}>
               Workspace Status
             </h3>
             <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
@@ -71,13 +71,13 @@ export function WorkspaceOverview() {
             Overall progress
           </span>
           <span style={{ color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
-            <strong style={{ color: '#ffffff' }}>{completedCount}</strong> of {totalTasks} ({completionRate}%)
+            <strong style={{ color: 'var(--heading-color)' }}>{completedCount}</strong> of {totalTasks} ({completionRate}%)
           </span>
         </div>
         <div style={{
           height: '6px',
           width: '100%',
-          background: 'rgba(255, 255, 255, 0.06)',
+          background: 'var(--bg-subtle)',
           borderRadius: '9999px',
           overflow: 'hidden'
         }}>
@@ -107,7 +107,7 @@ export function WorkspaceOverview() {
           textAlign: 'center'
         }}>
           <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Pending</div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ffffff', marginTop: '0.1rem', fontVariantNumeric: 'tabular-nums' }}>
+          <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--heading-color)', marginTop: '0.1rem', fontVariantNumeric: 'tabular-nums' }}>
             {pendingCount}
           </div>
         </div>
@@ -120,7 +120,7 @@ export function WorkspaceOverview() {
           textAlign: 'center'
         }}>
           <div style={{ fontSize: '0.68rem', color: dueSoonCount > 0 ? '#fbbf24' : 'var(--text-muted)' }}>Due today</div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 700, color: dueSoonCount > 0 ? '#fbbf24' : '#ffffff', marginTop: '0.1rem', fontVariantNumeric: 'tabular-nums' }}>
+          <div style={{ fontSize: '1.2rem', fontWeight: 700, color: dueSoonCount > 0 ? '#fbbf24' : 'var(--heading-color)', marginTop: '0.1rem', fontVariantNumeric: 'tabular-nums' }}>
             {dueSoonCount}
           </div>
         </div>
@@ -133,7 +133,7 @@ export function WorkspaceOverview() {
           textAlign: 'center'
         }}>
           <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Projects</div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ffffff', marginTop: '0.1rem', fontVariantNumeric: 'tabular-nums' }}>
+          <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--heading-color)', marginTop: '0.1rem', fontVariantNumeric: 'tabular-nums' }}>
             {quests.filter(q => !q.completed).length}
           </div>
         </div>

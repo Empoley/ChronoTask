@@ -37,6 +37,7 @@ export function getDefaultSeedData(baseDateStr: string = STATIC_BASE_TIME): Game
       deadline: getRelativeDateStr(0, 14, 0, baseDateStr), // Today 2:00 PM
       difficulty: 'easy',
       questId: 'quest-1',
+      milestoneId: 'm-1',
       completed: false,
       tags: ['Management', 'Meeting'],
       createdAt: createdAtStr
@@ -48,6 +49,7 @@ export function getDefaultSeedData(baseDateStr: string = STATIC_BASE_TIME): Game
       deadline: getRelativeDateStr(0, 16, 30, baseDateStr), // Today 4:30 PM
       difficulty: 'hard',
       questId: 'quest-1',
+      milestoneId: 'm-1',
       completed: false,
       tags: ['DevOps', 'Incident'],
       notes: 'Root cause identified in keepalive timeout threshold on external load balancer.',
@@ -60,6 +62,7 @@ export function getDefaultSeedData(baseDateStr: string = STATIC_BASE_TIME): Game
       deadline: getRelativeDateStr(0, 20, 0, baseDateStr), // Today 8:00 PM
       difficulty: 'medium',
       questId: 'quest-1',
+      milestoneId: 'm-1',
       completed: false,
       tags: ['Engineering', 'Bugfix'],
       createdAt: createdAtStr

@@ -2,14 +2,14 @@
 
 ## What Is ChronoTasks?
 
-ChronoTasks is a **modern, proactive task and workload management web application** built with Next.js. It helps individuals and teams anticipate upcoming deadlines, balance task density across time horizons, track multi-stage projects with milestone breakdowns, and log progress notes. All data is persisted locally in the browser via `localStorage`; no login or backend is required.
+ChronoTasks is a **modern, proactive task and workload management web application** built with Next.js and Supabase. It helps individuals and teams anticipate upcoming deadlines, balance task density across time horizons, track multi-stage projects with milestone breakdowns, and log progress notes. All user accounts, tasks, and collaborative projects are securely stored and synced in the cloud via Supabase (PostgreSQL with Row-Level Security).
 
 ---
 
 ## Core Features
 
 ### 1. Task Management
-- **Create Tasks** with a title, optional description, deadline (date + time picker with quick presets for Today, This Week, Next Week, and Next Month), difficulty rating (Easy, Medium, Hard, Epic), project association, and tags.
+- **Create Tasks** with a title, optional description, deadline (date + time picker with quick presets for Today, This Week, Next Week, and Next Month), difficulty rating (Easy, Medium, Hard), project association, milestone tagging, and tags.
 - **Horizon-based Grouping** — tasks are automatically organized into horizon categories based on due dates:
   - *Overdue*, *Today*, *This Week*, *Next Week*, *Next Month*, *Later*, and *Completed*
 - **Search & Filter** — live search by title, description, or tags, along with difficulty filter.
@@ -56,18 +56,23 @@ A sleek metrics panel providing real-time operational context:
 
 ---
 
-### 6. Data Persistence
-- Automatic local persistence in browser `localStorage`.
-- **Reset Demo Data** option in the header to restore default sample tasks and projects at any time.
+### 6. Cloud Persistence & Authentication
+- **Supabase Cloud Backend**: Tasks, projects, milestones, and member invitations are stored in a managed PostgreSQL database with Row-Level Security (RLS).
+- **Secure Authentication**: Built-in user authentication (email/password signup & sign-in) via Supabase Auth.
+- **Real-Time Data Sync**: Automatic synchronization of workspace changes across sessions and collaborators.
+- **Collaborative Project Sharing**: Invite team members by email with role-based access permissions (`owner`, `editor`, `viewer`).
+- **Demo Data Seeding**: Automatically seeds comprehensive sample data upon first user onboarding.
 
 ---
 
 ## Technology Stack
 | Layer | Technology |
 |---|---|
-| Framework | Next.js (App Router, TypeScript) |
-| Styling | Vanilla CSS (custom design system with CSS variables, dark glassmorphic UI) |
+| Framework | Next.js 15 (App Router, React 19, TypeScript) |
+| Styling | Vanilla CSS (custom design system with CSS variables, responsive layout, dark/light modes) |
+| Database & Backend | Supabase (PostgreSQL with Row-Level Security) |
+| Authentication | Supabase Auth (Email & Password, session management) |
+| Email Service | Resend API (automated & manual workload alert emails) |
 | Icons | Lucide React |
 | Confetti | canvas-confetti |
-| Audio | Web Audio API (synthesized) |
-| Storage | Browser localStorage |
+| Audio | Web Audio API (synthesized harmonic chimes) |

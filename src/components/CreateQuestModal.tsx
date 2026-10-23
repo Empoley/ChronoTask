@@ -78,7 +78,7 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--heading-color)', letterSpacing: '-0.01em' }}>
             New project
           </h3>
           <button
@@ -104,9 +104,9 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
               onChange={e => setTitle(e.target.value)}
               style={{
                 width: '100%',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid var(--border-subtle)',
-                color: '#ffffff',
+                background: 'var(--input-bg)',
+                border: '1px solid var(--input-border)',
+                color: 'var(--text-main)',
                 padding: '0.55rem 0.75rem',
                 borderRadius: 'var(--radius-md)',
                 fontSize: '0.85rem',
@@ -127,9 +127,9 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
               onChange={e => setDescription(e.target.value)}
               style={{
                 width: '100%',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid var(--border-subtle)',
-                color: '#ffffff',
+                background: 'var(--input-bg)',
+                border: '1px solid var(--input-border)',
+                color: 'var(--text-main)',
                 padding: '0.55rem 0.75rem',
                 borderRadius: 'var(--radius-md)',
                 fontSize: '0.82rem',
@@ -155,7 +155,7 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                       width: '28px',
                       height: '28px',
                       borderRadius: '6px',
-                      background: icon === ic ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                      background: icon === ic ? 'var(--brand-subtle)' : 'var(--bg-subtle)',
                       border: icon === ic ? `1px solid ${color}` : '1px solid var(--border-subtle)',
                       cursor: 'pointer',
                       fontSize: '0.95rem'
@@ -182,7 +182,7 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                       height: '20px',
                       borderRadius: '50%',
                       background: c,
-                      border: color === c ? '2px solid #ffffff' : 'none',
+                      border: color === c ? '2px solid var(--heading-color)' : 'none',
                       cursor: 'pointer'
                     }}
                   />
@@ -218,9 +218,9 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
                     onChange={e => handleUpdateMilestone(idx, e.target.value)}
                     style={{
                       flex: 1,
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid var(--border-subtle)',
-                      color: '#ffffff',
+                      background: 'var(--input-bg)',
+                      border: '1px solid var(--input-border)',
+                      color: 'var(--text-main)',
                       padding: '0.45rem 0.65rem',
                       borderRadius: 'var(--radius-sm)',
                       fontSize: '0.8rem',

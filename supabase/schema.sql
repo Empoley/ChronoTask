@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   quest_id TEXT REFERENCES public.projects(id) ON DELETE SET NULL,
+  milestone_id TEXT,
   title TEXT NOT NULL,
   description TEXT DEFAULT '',
   deadline TEXT NOT NULL,
@@ -75,6 +76,9 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   notes TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Migration for existing databases: ensure milestone_id column exists
+ALTER TABLE public.tasks ADD COLUMN IF NOT EXISTS milestone_id TEXT;
 
 -- Enable Row-Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;

@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { GameProvider } from '@/context/GameContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthModal } from '@/components/AuthModal';
 
 const jakarta = Plus_Jakarta_Sans({
@@ -29,14 +30,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={jakarta.variable}>
+    <html lang="en" className={jakarta.variable} data-theme="dark" suppressHydrationWarning>
       <body>
-        <AuthProvider>
-          <GameProvider>
-            {children}
-            <AuthModal />
-          </GameProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <GameProvider>
+              {children}
+              <AuthModal />
+            </GameProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

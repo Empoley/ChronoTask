@@ -126,8 +126,8 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
                 <span>{tab.label}</span>
                 <span style={{
                   fontSize: '0.68rem',
-                  color: isSelected ? '#ffffff' : 'var(--text-muted)',
-                  background: isSelected ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                  color: isSelected ? 'var(--heading-color)' : 'var(--text-muted)',
+                  background: isSelected ? 'var(--brand-subtle)' : 'var(--bg-subtle)',
                   padding: '0.06rem 0.35rem',
                   borderRadius: '9999px',
                   fontVariantNumeric: 'tabular-nums'
@@ -162,9 +162,9 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               style={{
-                background: 'rgba(255, 255, 255, 0.035)',
+                background: 'var(--input-bg)',
                 border: '1px solid var(--border-subtle)',
-                color: '#ffffff',
+                color: 'var(--text-main)',
                 padding: '0.36rem 0.65rem 0.36rem 2rem',
                 borderRadius: 'var(--radius-md)',
                 fontSize: '0.78rem',
@@ -179,21 +179,21 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
             value={difficultyFilter}
             onChange={e => setDifficultyFilter(e.target.value)}
             style={{
-              background: '#121622',
+              background: 'var(--input-bg)',
               border: '1px solid var(--border-subtle)',
               color: 'var(--text-secondary)',
               padding: '0.36rem 0.65rem',
               borderRadius: 'var(--radius-md)',
               fontSize: '0.76rem',
               outline: 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              colorScheme: 'var(--color-scheme)'
             }}
           >
             <option value="all">All priorities</option>
             <option value="easy">Easy</option>
             <option value="medium">Medium</option>
             <option value="hard">Hard</option>
-            <option value="epic">Epic</option>
           </select>
         </div>
       </div>
@@ -223,7 +223,7 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
           </div>
 
           <div>
-            <h4 style={{ fontSize: '0.9rem', color: '#ffffff', marginBottom: '0.2rem' }}>
+            <h4 style={{ fontSize: '0.9rem', color: 'var(--heading-color)', marginBottom: '0.2rem' }}>
               {getEmptyStateMessage()}
             </h4>
             <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', maxWidth: '320px', margin: '0 auto' }}>

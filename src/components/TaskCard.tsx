@@ -24,6 +24,7 @@ export function TaskCard({ task }: TaskCardProps) {
   }, [task.notes]);
 
   const quest = task.questId ? state.quests.find(q => q.id === task.questId) : null;
+  const milestone = (quest && task.milestoneId) ? quest.milestones.find(m => m.id === task.milestoneId) : null;
 
   const difficultyMeta: Record<string, { label: string; badgeClass: string }> = {
     easy: { label: 'Easy', badgeClass: 'badge-easy' },
@@ -66,9 +67,9 @@ export function TaskCard({ task }: TaskCardProps) {
             width: '18px',
             height: '18px',
             borderRadius: '5px',
-            background: task.completed ? 'var(--accent-green)' : 'rgba(255, 255, 255, 0.04)',
+            background: task.completed ? 'var(--accent-green)' : 'transparent',
             border: task.completed ? '1px solid var(--accent-green)' : '1px solid var(--border-card)',
-            color: task.completed ? '#000000' : 'transparent',
+            color: '#000000',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -89,7 +90,7 @@ export function TaskCard({ task }: TaskCardProps) {
               style={{
                 fontSize: '0.9rem',
                 fontWeight: 500,
-                color: task.completed ? 'var(--text-muted)' : '#ffffff',
+                color: task.completed ? 'var(--text-muted)' : 'var(--heading-color)',
                 textDecoration: task.completed ? 'line-through' : 'none',
                 lineHeight: 1.35,
                 cursor: 'pointer',
@@ -178,7 +179,7 @@ export function TaskCard({ task }: TaskCardProps) {
               <span style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.25rem',
+                gap: '0.3rem',
                 color: 'var(--text-secondary)',
                 background: 'var(--bg-subtle)',
                 border: '1px solid var(--border-subtle)',
@@ -188,6 +189,12 @@ export function TaskCard({ task }: TaskCardProps) {
               }}>
                 <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: quest.color }} />
                 <span>{quest.title}</span>
+                {milestone && (
+                  <>
+                    <span style={{ opacity: 0.4 }}>/</span>
+                    <span style={{ color: 'var(--brand)', fontWeight: 600 }}>{milestone.title}</span>
+                  </>
+                )}
               </span>
             )}
 
@@ -241,9 +248,9 @@ export function TaskCard({ task }: TaskCardProps) {
             placeholder="Record task status, key decisions, or next steps..."
             style={{
               width: '100%',
-              background: 'rgba(255, 255, 255, 0.035)',
-              border: '1px solid var(--border-card)',
-              color: '#ffffff',
+              background: 'var(--input-bg)',
+              border: '1px solid var(--input-border)',
+              color: 'var(--text-main)',
               padding: '0.45rem 0.65rem',
               borderRadius: 'var(--radius-sm)',
               fontSize: '0.78rem',

@@ -19,6 +19,7 @@ interface GameContextType {
     deadline: string;
     difficulty: TaskDifficulty;
     questId?: string;
+    milestoneId?: string;
     tags?: string[];
   }) => void;
   toggleTaskComplete: (taskId: string) => void;
@@ -32,6 +33,7 @@ interface GameContextType {
     milestoneTitles: string[];
     deadline?: string;
   }) => void;
+  addMilestoneToQuest: (questId: string, title: string) => Promise<string>;
   toggleMilestone: (questId: string, milestoneId: string) => void;
   toggleQuestComplete: (questId: string) => void;
   deleteQuest: (questId: string) => void;
@@ -159,19 +161,36 @@ export function GameProvider({ children }: { children: ReactNode }) {
               if (!t.quest_id) return t.user_id === user.id;
               return activeProjectIds.has(t.quest_id);
             })
-            .map((t: any) => ({
-              id: t.id,
-              title: t.title,
-              description: t.description || '',
-              deadline: t.deadline,
-              difficulty: t.difficulty,
-              questId: t.quest_id || undefined,
-              completed: t.completed,
-              completedAt: t.completed_at,
-              tags: t.tags || ['General'],
-              notes: t.notes || '',
-              createdAt: t.created_at
-            }));
+            .map((t: any) => {
+              let milestoneId: string | undefined = t.milestone_id || undefined;
+              if (!milestoneId && Array.isArray(t.tags)) {
+                const msTag = t.tags.find((tag: string) => typeof tag === 'string' && tag.startsWith('ms:'));
+                if (msTag) milestoneId = msTag.slice(3);
+              }
+              if (!milestoneId && t.quest_id) {
+                const proj = allQuestsRaw.find((q: any) => q.id === t.quest_id);
+                if (proj && Array.isArray(proj.milestones)) {
+                  const m = proj.milestones.find((mItem: any) => Array.isArray(mItem.taskIds) && mItem.taskIds.includes(t.id));
+                  if (m) milestoneId = m.id;
+                }
+              }
+              const visibleTags = (t.tags || ['General']).filter((tag: string) => typeof tag === 'string' && !tag.startsWith('ms:'));
+
+              return {
+                id: t.id,
+                title: t.title,
+                description: t.description || '',
+                deadline: t.deadline,
+                difficulty: t.difficulty,
+                questId: t.quest_id || undefined,
+                milestoneId,
+                completed: t.completed,
+                completedAt: t.completed_at,
+                tags: visibleTags.length > 0 ? visibleTags : ['General'],
+                notes: t.notes || '',
+                createdAt: t.created_at
+              };
+            });
 
           setState({ tasks: mappedTasks, quests: mappedQuests });
           setIsCloudSynced(true);
@@ -241,8 +260,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     deadline: string;
     difficulty: TaskDifficulty;
     questId?: string;
+    milestoneId?: string;
     tags?: string[];
   }) => {
+    const cleanTags = data.tags && data.tags.length > 0 ? [...data.tags] : ['General'];
     const newTask: Task = {
       id: `task-${Date.now()}`,
       title: data.title.trim(),
@@ -250,29 +271,91 @@ export function GameProvider({ children }: { children: ReactNode }) {
       deadline: data.deadline,
       difficulty: data.difficulty,
       questId: data.questId || undefined,
+      milestoneId: data.milestoneId || undefined,
       completed: false,
-      tags: data.tags && data.tags.length > 0 ? data.tags : ['General'],
+      tags: cleanTags,
       createdAt: new Date().toISOString()
     };
 
-    setState(prev => ({
-      ...prev,
-      tasks: [newTask, ...prev.tasks]
-    }));
+    // Store internal tag for cloud resilience if column milestone_id is not yet created in Supabase
+    const tagsForCloud = [...cleanTags];
+    if (data.milestoneId && !tagsForCloud.some(t => t.startsWith('ms:'))) {
+      tagsForCloud.push(`ms:${data.milestoneId}`);
+    }
+
+    setState(prev => {
+      let updatedQuests = prev.quests;
+      if (newTask.questId && newTask.milestoneId) {
+        updatedQuests = prev.quests.map(q => {
+          if (q.id === newTask.questId) {
+            const updatedMilestones = q.milestones.map(m => {
+              if (m.id === newTask.milestoneId) {
+                const existingTaskIds = m.taskIds || [];
+                return {
+                  ...m,
+                  taskIds: existingTaskIds.includes(newTask.id) ? existingTaskIds : [...existingTaskIds, newTask.id]
+                };
+              }
+              return m;
+            });
+            return { ...q, milestones: updatedMilestones };
+          }
+          return q;
+        });
+      }
+
+      return {
+        ...prev,
+        tasks: [newTask, ...prev.tasks],
+        quests: updatedQuests
+      };
+    });
 
     if (userRef.current) {
-      supabase.from('tasks').insert({
+      const payload: any = {
         id: newTask.id,
         user_id: userRef.current.id,
         quest_id: newTask.questId || null,
+        milestone_id: newTask.milestoneId || null,
         title: newTask.title,
         description: newTask.description,
         deadline: newTask.deadline,
         difficulty: newTask.difficulty,
         completed: false,
-        tags: newTask.tags,
+        tags: tagsForCloud,
         notes: ''
-      }).then();
+      };
+
+      // Try inserting with milestone_id. Fall back to insert without milestone_id if column not present yet
+      supabase.from('tasks').insert(payload).then(({ error }) => {
+        if (error) {
+          if (error.code === '42703' || error.message?.includes('milestone_id')) {
+            const { milestone_id, ...fallbackPayload } = payload;
+            supabase.from('tasks').insert(fallbackPayload).then();
+          } else {
+            console.warn('Error inserting task into Supabase:', error);
+          }
+        }
+      });
+
+      // Also persist milestone taskIds to project in Supabase if linked
+      if (newTask.questId && newTask.milestoneId) {
+        supabase.from('projects').select('milestones').eq('id', newTask.questId).single().then(({ data }) => {
+          if (data && Array.isArray(data.milestones)) {
+            const updated = data.milestones.map((m: any) => {
+              if (m.id === newTask.milestoneId) {
+                const existing = Array.isArray(m.taskIds) ? m.taskIds : [];
+                return {
+                  ...m,
+                  taskIds: existing.includes(newTask.id) ? existing : [...existing, newTask.id]
+                };
+              }
+              return m;
+            });
+            supabase.from('projects').update({ milestones: updated }).eq('id', newTask.questId).then();
+          }
+        });
+      }
     }
   }, []);
 
@@ -377,6 +460,41 @@ export function GameProvider({ children }: { children: ReactNode }) {
         completed: false
       }).then();
     }
+  }, []);
+
+  const addMilestoneToQuest = useCallback(async (questId: string, title: string): Promise<string> => {
+    const trimmed = title.trim();
+    if (!trimmed) return '';
+    const newMilestoneId = `m-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const newMilestone = {
+      id: newMilestoneId,
+      title: trimmed,
+      completed: false,
+      taskIds: []
+    };
+
+    let targetUpdatedMilestones: any[] = [];
+
+    setState(prev => {
+      const quest = prev.quests.find(q => q.id === questId);
+      if (!quest) return prev;
+      targetUpdatedMilestones = [...quest.milestones, newMilestone];
+      return {
+        ...prev,
+        quests: prev.quests.map(q => q.id === questId ? { ...q, milestones: targetUpdatedMilestones, completed: false } : q)
+      };
+    });
+
+    if (userRef.current) {
+      const { data } = await supabase.from('projects').select('milestones').eq('id', questId).single();
+      const existing = (data && Array.isArray(data.milestones)) ? data.milestones : [];
+      await supabase.from('projects').update({
+        milestones: [...existing, newMilestone],
+        completed: false
+      }).eq('id', questId);
+    }
+
+    return newMilestoneId;
   }, []);
 
   const toggleMilestone = useCallback((questId: string, milestoneId: string) => {
@@ -561,6 +679,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         updateTaskNotes,
         deleteTask,
         addQuest,
+        addMilestoneToQuest,
         toggleMilestone,
         toggleQuestComplete,
         deleteQuest,

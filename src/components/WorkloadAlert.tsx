@@ -92,7 +92,7 @@ export function WorkloadAlert({ onFocusHorizon }: WorkloadAlertProps) {
             <AlertTriangle size={15} />
           </div>
           <div>
-            <h3 style={{ fontSize: '0.92rem', fontWeight: 600, color: '#ffffff', margin: 0, letterSpacing: '-0.01em' }}>
+            <h3 style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--heading-color)', margin: 0, letterSpacing: '-0.01em' }}>
               Workload alert
             </h3>
             <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
@@ -142,7 +142,7 @@ export function WorkloadAlert({ onFocusHorizon }: WorkloadAlertProps) {
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '0.65rem 0.85rem',
-              background: 'rgba(255, 255, 255, 0.03)',
+              background: 'var(--bg-subtle)',
               border: '1px solid var(--border-subtle)',
               borderRadius: 'var(--radius-md)',
               gap: '0.75rem',
@@ -160,7 +160,7 @@ export function WorkloadAlert({ onFocusHorizon }: WorkloadAlertProps) {
                 }}
               />
               <div>
-                <span style={{ fontSize: '0.84rem', fontWeight: 600, color: '#ffffff' }}>
+                <span style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--heading-color)' }}>
                   {alert.label}
                 </span>
                 <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>

@@ -2,21 +2,40 @@
 
 import React, { useState, useMemo } from 'react';
 import { useGame } from '@/context/GameContext';
-import { CheckCircle2, Circle, Plus, Trash2, Users, FolderGit2 } from 'lucide-react';
+import { 
+  CheckCircle2, 
+  Circle, 
+  Plus, 
+  Trash2, 
+  Users, 
+  FolderGit2, 
+  ChevronDown, 
+  ChevronUp, 
+  Check 
+} from 'lucide-react';
 import { InviteModal } from './InviteModal';
 import { Quest } from '@/types/game';
+import { getTaskProximity, formatDeadline } from '@/utils/dateUtils';
 
 interface QuestListProps {
   onOpenCreateQuest: () => void;
-  onOpenCreateTaskForQuest: (questId: string) => void;
+  onOpenCreateTaskForQuest: (questId: string, milestoneId?: string) => void;
 }
 
 export function QuestList({ onOpenCreateQuest, onOpenCreateTaskForQuest }: QuestListProps) {
-  const { state, toggleMilestone, toggleQuestComplete, deleteQuest } = useGame();
+  const { state, toggleMilestone, toggleQuestComplete, deleteQuest, toggleTaskComplete, deleteTask } = useGame();
   const { quests, tasks } = state;
 
   const [projectFilter, setProjectFilter] = useState<'active' | 'completed' | 'all'>('active');
   const [inviteQuest, setInviteQuest] = useState<Quest | null>(null);
+  const [expandedMilestones, setExpandedMilestones] = useState<Record<string, boolean>>({});
+
+  const toggleMilestoneDropdown = (key: string) => {
+    setExpandedMilestones(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
 
   const activeQuests = useMemo(() => quests.filter(q => !q.completed), [quests]);
   const completedQuests = useMemo(() => quests.filter(q => q.completed), [quests]);
@@ -62,8 +81,8 @@ export function QuestList({ onOpenCreateQuest, onOpenCreateTaskForQuest }: Quest
                 <span>{tab.label}</span>
                 <span style={{
                   fontSize: '0.68rem',
-                  color: isSelected ? '#ffffff' : 'var(--text-muted)',
-                  background: isSelected ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                  color: isSelected ? 'var(--heading-color)' : 'var(--text-muted)',
+                  background: isSelected ? 'var(--brand-subtle)' : 'var(--bg-subtle)',
                   padding: '0.06rem 0.35rem',
                   borderRadius: '9999px',
                   fontVariantNumeric: 'tabular-nums'
@@ -111,7 +130,7 @@ export function QuestList({ onOpenCreateQuest, onOpenCreateTaskForQuest }: Quest
           </div>
 
           <div>
-            <h4 style={{ fontSize: '0.9rem', color: '#ffffff', marginBottom: '0.2rem' }}>
+            <h4 style={{ fontSize: '0.9rem', color: 'var(--heading-color)', marginBottom: '0.2rem' }}>
               {projectFilter === 'completed'
                 ? 'No completed projects'
                 : 'No active projects found'}
@@ -135,12 +154,17 @@ export function QuestList({ onOpenCreateQuest, onOpenCreateTaskForQuest }: Quest
         </div>
       ) : (
         /* Projects Grid */
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '0.85rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '0.9rem' }}>
           {filteredQuests.map(quest => {
             const completedMilestones = quest.milestones.filter(m => m.completed).length;
             const totalMilestones = quest.milestones.length;
             const progressPercent = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
-            const linkedTasks = tasks.filter(t => t.questId === quest.id && !t.completed);
+            
+            // All tasks belonging to this project (both under milestones and general)
+            const allProjectTasks = tasks.filter(t => t.questId === quest.id);
+            const pendingProjectTasks = allProjectTasks.filter(t => !t.completed);
+            const completedProjectTasks = allProjectTasks.filter(t => t.completed);
+            const unassignedTasks = allProjectTasks.filter(t => !t.milestoneId);
 
             return (
               <div
@@ -150,9 +174,9 @@ export function QuestList({ onOpenCreateQuest, onOpenCreateTaskForQuest }: Quest
                   padding: '1.15rem',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.8rem',
+                  gap: '0.85rem',
                   borderTop: `2.5px solid ${quest.color}`,
-                  opacity: quest.completed ? 0.75 : 1,
+                  opacity: quest.completed ? 0.78 : 1,
                   transition: 'all 0.15s ease'
                 }}
               >
@@ -174,7 +198,7 @@ export function QuestList({ onOpenCreateQuest, onOpenCreateTaskForQuest }: Quest
                       {quest.icon}
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '0.94rem', fontWeight: 600, color: '#ffffff', margin: 0 }}>
+                      <h3 style={{ fontSize: '0.94rem', fontWeight: 600, color: 'var(--heading-color)', margin: 0 }}>
                         {quest.title}
                       </h3>
                       {quest.description && (
@@ -189,7 +213,7 @@ export function QuestList({ onOpenCreateQuest, onOpenCreateTaskForQuest }: Quest
                     <span style={{
                       fontSize: '0.68rem',
                       background: 'var(--accent-green-subtle)',
-                      color: '#34d399',
+                      color: 'var(--accent-green)',
                       border: '1px solid var(--accent-green-border)',
                       padding: '0.12rem 0.45rem',
                       borderRadius: '4px',
@@ -212,12 +236,14 @@ export function QuestList({ onOpenCreateQuest, onOpenCreateTaskForQuest }: Quest
                     color: 'var(--text-muted)'
                   }}>
                     <span>Milestones ({completedMilestones} of {totalMilestones})</span>
-                    <span style={{ fontWeight: 600, color: '#ffffff', fontVariantNumeric: 'tabular-nums' }}>{progressPercent}%</span>
+                    <span style={{ fontWeight: 600, color: 'var(--heading-color)', fontVariantNumeric: 'tabular-nums' }}>
+                      {progressPercent}%
+                    </span>
                   </div>
                   <div style={{
                     height: '4px',
                     width: '100%',
-                    background: 'rgba(255, 255, 255, 0.06)',
+                    background: 'var(--bg-subtle)',
                     borderRadius: '9999px',
                     overflow: 'hidden'
                   }}>
@@ -233,41 +259,286 @@ export function QuestList({ onOpenCreateQuest, onOpenCreateTaskForQuest }: Quest
                   </div>
                 </div>
 
-                {/* Milestones checklist */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                  {quest.milestones.map(m => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => toggleMilestone(quest.id, m.id)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.45rem',
-                        background: m.completed ? 'rgba(255, 255, 255, 0.02)' : 'var(--bg-subtle)',
-                        border: '1px solid var(--border-subtle)',
-                        borderRadius: 'var(--radius-sm)',
-                        padding: '0.4rem 0.6rem',
-                        color: m.completed ? 'var(--text-muted)' : 'var(--text-main)',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        fontSize: '0.76rem',
-                        transition: 'all 0.1s ease'
-                      }}
-                    >
-                      {m.completed ? (
-                        <CheckCircle2 size={14} color="var(--accent-green)" />
-                      ) : (
-                        <Circle size={14} color="var(--text-dim)" />
+                {/* Milestones List with Dropdowns */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  {quest.milestones.map(m => {
+                    const milestoneKey = `${quest.id}-${m.id}`;
+                    const milestoneTasks = tasks.filter(t => t.questId === quest.id && t.milestoneId === m.id);
+                    const milestoneCompletedTasks = milestoneTasks.filter(t => t.completed);
+                    const isExpanded = !!expandedMilestones[milestoneKey];
+
+                    return (
+                      <div key={m.id} className="milestone-container">
+                        {/* Milestone header row - Click to toggle dropdown */}
+                        <div
+                          className="milestone-header-row"
+                          onClick={() => toggleMilestoneDropdown(milestoneKey)}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, flex: 1 }}>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleMilestone(quest.id, m.id);
+                              }}
+                              title={m.completed ? 'Mark milestone incomplete' : 'Mark milestone complete'}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                padding: 0,
+                                display: 'flex',
+                                alignItems: 'center',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {m.completed ? (
+                                <CheckCircle2 size={15} color="var(--accent-green)" />
+                              ) : (
+                                <Circle size={15} color="var(--text-dim)" />
+                              )}
+                            </button>
+
+                            <span style={{
+                              textDecoration: m.completed ? 'line-through' : 'none',
+                              color: m.completed ? 'var(--text-muted)' : 'var(--text-main)',
+                              fontSize: '0.78rem',
+                              fontWeight: 500,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {m.title}
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
+                            {/* Milestone Tasks Counter Badge */}
+                            <span className={`milestone-task-badge ${milestoneTasks.length === 0 ? 'is-zero' : (milestoneCompletedTasks.length === milestoneTasks.length ? 'is-completed' : '')}`}>
+                              {milestoneTasks.length === 0 ? '0 tasks' : `${milestoneCompletedTasks.length}/${milestoneTasks.length} tasks`}
+                            </span>
+
+                            {/* Direct "+ Task" button */}
+                            {!quest.completed && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenCreateTaskForQuest(quest.id, m.id);
+                                }}
+                                title={`Add task under milestone "${m.title}"`}
+                                className="btn btn-ghost"
+                                style={{ padding: '0.12rem 0.35rem', fontSize: '0.7rem', color: 'var(--brand)' }}
+                              >
+                                <Plus size={11} strokeWidth={2.5} />
+                                <span>Task</span>
+                              </button>
+                            )}
+
+                            {/* Dropdown Chevron */}
+                            <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
+                              {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Milestone Tasks Dropdown Drawer */}
+                        {isExpanded && (
+                          <div className="milestone-drawer">
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.15rem' }}>
+                              <span style={{ fontSize: '0.67rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                Milestone Tasks ({milestoneTasks.length})
+                              </span>
+                              {!quest.completed && (
+                                <button
+                                  type="button"
+                                  onClick={() => onOpenCreateTaskForQuest(quest.id, m.id)}
+                                  className="btn btn-ghost"
+                                  style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem', color: 'var(--brand)' }}
+                                >
+                                  <Plus size={11} />
+                                  <span>Add task</span>
+                                </button>
+                              )}
+                            </div>
+
+                            {milestoneTasks.length === 0 ? (
+                              <div style={{
+                                padding: '0.65rem',
+                                textAlign: 'center',
+                                background: 'var(--bg-subtle)',
+                                borderRadius: 'var(--radius-sm)',
+                                fontSize: '0.72rem',
+                                color: 'var(--text-muted)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '0.35rem'
+                              }}>
+                                <span>No tasks added to this milestone yet.</span>
+                                {!quest.completed && (
+                                  <button
+                                    type="button"
+                                    onClick={() => onOpenCreateTaskForQuest(quest.id, m.id)}
+                                    className="btn btn-secondary"
+                                    style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}
+                                  >
+                                    <Plus size={11} />
+                                    <span>Add task to milestone</span>
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                                {milestoneTasks.map(task => {
+                                  const prox = getTaskProximity(task.deadline);
+                                  return (
+                                    <div key={task.id} className={`milestone-task-card ${task.completed ? 'is-done' : ''}`}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0, flex: 1 }}>
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleTaskComplete(task.id)}
+                                          title={task.completed ? 'Mark incomplete' : 'Mark complete'}
+                                          style={{
+                                            width: '15px',
+                                            height: '15px',
+                                            borderRadius: '4px',
+                                            background: task.completed ? 'var(--accent-green)' : 'transparent',
+                                            border: task.completed ? '1px solid var(--accent-green)' : '1px solid var(--border-subtle)',
+                                            color: '#ffffff',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            flexShrink: 0,
+                                            transition: 'all 0.12s ease'
+                                          }}
+                                        >
+                                          <Check size={10} strokeWidth={3} />
+                                        </button>
+                                        <span style={{
+                                          fontSize: '0.76rem',
+                                          color: task.completed ? 'var(--text-muted)' : 'var(--text-main)',
+                                          textDecoration: task.completed ? 'line-through' : 'none',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap'
+                                        }}>
+                                          {task.title}
+                                        </span>
+                                      </div>
+
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }}>
+                                        <span className={`badge badge-proximity-${prox}`} style={{ fontSize: '0.62rem', padding: '0.04rem 0.35rem' }}>
+                                          {formatDeadline(task.deadline)}
+                                        </span>
+                                        <span className={`badge badge-${task.difficulty}`} style={{ fontSize: '0.62rem', padding: '0.04rem 0.32rem' }}>
+                                          {task.difficulty}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => deleteTask(task.id)}
+                                          title="Delete task"
+                                          className="btn btn-ghost"
+                                          style={{ padding: '0.12rem', color: 'var(--text-dim)' }}
+                                        >
+                                          <Trash2 size={11} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {/* General / Unassigned Tasks Drawer (if any exist) */}
+                  {unassignedTasks.length > 0 && (
+                    <div className="milestone-container" style={{ borderStyle: 'dashed' }}>
+                      <div
+                        className="milestone-header-row"
+                        onClick={() => toggleMilestoneDropdown(`${quest.id}-unassigned`)}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0, flex: 1 }}>
+                          <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                            📁 General project tasks
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
+                          <span className="milestone-task-badge is-zero">
+                            {unassignedTasks.filter(t => t.completed).length}/{unassignedTasks.length} tasks
+                          </span>
+                          <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>
+                            {expandedMilestones[`${quest.id}-unassigned`] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </div>
+                        </div>
+                      </div>
+
+                      {expandedMilestones[`${quest.id}-unassigned`] && (
+                        <div className="milestone-drawer">
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                            {unassignedTasks.map(task => {
+                              const prox = getTaskProximity(task.deadline);
+                              return (
+                                <div key={task.id} className={`milestone-task-card ${task.completed ? 'is-done' : ''}`}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', minWidth: 0, flex: 1 }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleTaskComplete(task.id)}
+                                      title={task.completed ? 'Mark incomplete' : 'Mark complete'}
+                                      style={{
+                                        width: '15px',
+                                        height: '15px',
+                                        borderRadius: '4px',
+                                        background: task.completed ? 'var(--accent-green)' : 'transparent',
+                                        border: task.completed ? '1px solid var(--accent-green)' : '1px solid var(--border-subtle)',
+                                        color: '#ffffff',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        flexShrink: 0
+                                      }}
+                                    >
+                                      <Check size={10} strokeWidth={3} />
+                                    </button>
+                                    <span style={{
+                                      fontSize: '0.76rem',
+                                      color: task.completed ? 'var(--text-muted)' : 'var(--text-main)',
+                                      textDecoration: task.completed ? 'line-through' : 'none',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      {task.title}
+                                    </span>
+                                  </div>
+
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }}>
+                                    <span className={`badge badge-proximity-${prox}`} style={{ fontSize: '0.62rem', padding: '0.04rem 0.35rem' }}>
+                                      {formatDeadline(task.deadline)}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => deleteTask(task.id)}
+                                      title="Delete task"
+                                      className="btn btn-ghost"
+                                      style={{ padding: '0.12rem', color: 'var(--text-dim)' }}
+                                    >
+                                      <Trash2 size={11} />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       )}
-                      <span style={{
-                        textDecoration: m.completed ? 'line-through' : 'none',
-                        flex: 1
-                      }}>
-                        {m.title}
-                      </span>
-                    </button>
-                  ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer Row */}
@@ -281,7 +552,12 @@ export function QuestList({ onOpenCreateQuest, onOpenCreateTaskForQuest }: Quest
                   fontSize: '0.72rem'
                 }}>
                   <span style={{ color: 'var(--text-muted)' }}>
-                    {linkedTasks.length} pending task{linkedTasks.length !== 1 ? 's' : ''}
+                    <strong style={{ color: 'var(--heading-color)', fontVariantNumeric: 'tabular-nums' }}>
+                      {pendingProjectTasks.length}
+                    </strong> pending task{pendingProjectTasks.length !== 1 ? 's' : ''}
+                    {allProjectTasks.length > 0 && (
+                      <span style={{ color: 'var(--text-dim)' }}> ({completedProjectTasks.length}/{allProjectTasks.length} done)</span>
+                    )}
                   </span>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>

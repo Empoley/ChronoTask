@@ -3,16 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { TaskDifficulty } from '@/types/game';
-import { X } from 'lucide-react';
+import { X, Plus, Target } from 'lucide-react';
 
 interface CreateTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultQuestId?: string;
+  defaultMilestoneId?: string;
 }
 
-export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskModalProps) {
-  const { state, addTask } = useGame();
+export function CreateTaskModal({ isOpen, onClose, defaultQuestId, defaultMilestoneId }: CreateTaskModalProps) {
+  const { state, addTask, addMilestoneToQuest } = useGame();
 
   const getDefaultDateTime = (daysAhead: number = 7) => {
     const d = new Date();
@@ -27,22 +28,29 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
   const [deadline, setDeadline] = useState('2026-10-16T18:00');
   const [difficulty, setDifficulty] = useState<TaskDifficulty>('medium');
   const [questId, setQuestId] = useState(defaultQuestId || '');
+  const [milestoneId, setMilestoneId] = useState(defaultMilestoneId || '');
   const [tagInput, setTagInput] = useState('');
+  const [isAddingNewMilestone, setIsAddingNewMilestone] = useState(false);
+  const [newMilestoneName, setNewMilestoneName] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       setDeadline(getDefaultDateTime(7));
-      if (defaultQuestId) setQuestId(defaultQuestId);
+      setQuestId(defaultQuestId || '');
+      setMilestoneId(defaultMilestoneId || '');
+      setIsAddingNewMilestone(false);
+      setNewMilestoneName('');
     }
-  }, [isOpen, defaultQuestId]);
+  }, [isOpen, defaultQuestId, defaultMilestoneId]);
 
   if (!isOpen) return null;
+
+  const selectedQuest = questId ? state.quests.find(q => q.id === questId) : null;
 
   const difficultyLevels: { key: TaskDifficulty; label: string; desc: string }[] = [
     { key: 'easy', label: 'Easy', desc: 'Low effort' },
     { key: 'medium', label: 'Medium', desc: 'Standard' },
-    { key: 'hard', label: 'Hard', desc: 'High effort' },
-    { key: 'epic', label: 'Epic', desc: 'Major' }
+    { key: 'hard', label: 'Hard', desc: 'High effort' }
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -60,12 +68,14 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
       deadline,
       difficulty,
       questId: questId || undefined,
+      milestoneId: (questId && milestoneId) ? milestoneId : undefined,
       tags: tags.length > 0 ? tags : ['General']
     });
 
     setTitle('');
     setDescription('');
     setTagInput('');
+    setMilestoneId('');
     onClose();
   };
 
@@ -76,17 +86,18 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
         onClick={e => e.stopPropagation()}
         style={{
           width: '100%',
-          maxWidth: '500px',
+          maxWidth: '520px',
           maxHeight: '90vh',
           overflowY: 'auto',
           padding: '1.5rem',
           background: 'var(--bg-card)',
           border: '1px solid var(--border-card)',
-          borderRadius: 'var(--radius-lg)'
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-lg)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--heading-color)', letterSpacing: '-0.01em' }}>
             New task
           </h3>
           <button
@@ -112,9 +123,9 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
               onChange={e => setTitle(e.target.value)}
               style={{
                 width: '100%',
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid var(--border-subtle)',
-                color: '#ffffff',
+                background: 'var(--input-bg)',
+                border: '1px solid var(--input-border)',
+                color: 'var(--text-main)',
                 padding: '0.55rem 0.75rem',
                 borderRadius: 'var(--radius-md)',
                 fontSize: '0.85rem',
@@ -135,9 +146,9 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
               onChange={e => setDescription(e.target.value)}
               style={{
                 width: '100%',
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid var(--border-subtle)',
-                color: '#ffffff',
+                background: 'var(--input-bg)',
+                border: '1px solid var(--input-border)',
+                color: 'var(--text-main)',
                 padding: '0.55rem 0.75rem',
                 borderRadius: 'var(--radius-md)',
                 fontSize: '0.82rem',
@@ -192,14 +203,14 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
               onChange={e => setDeadline(e.target.value)}
               style={{
                 width: '100%',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid var(--border-subtle)',
-                color: '#ffffff',
+                background: 'var(--input-bg)',
+                border: '1px solid var(--input-border)',
+                color: 'var(--text-main)',
                 padding: '0.55rem 0.75rem',
                 borderRadius: 'var(--radius-md)',
                 fontSize: '0.85rem',
                 outline: 'none',
-                colorScheme: 'dark'
+                colorScheme: 'var(--color-scheme)'
               }}
             />
           </div>
@@ -209,16 +220,16 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
             <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
               Difficulty
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.4rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
               {difficultyLevels.map(item => {
                 const isSelected = difficulty === item.key;
                 return (
-                    <button
+                  <button
                     key={item.key}
                     type="button"
                     onClick={() => setDifficulty(item.key)}
                     style={{
-                      background: isSelected ? 'var(--brand-subtle)' : 'rgba(255, 255, 255, 0.03)',
+                      background: isSelected ? 'var(--brand-subtle)' : 'var(--bg-subtle)',
                       border: isSelected ? '1px solid var(--brand)' : '1px solid var(--border-subtle)',
                       borderRadius: 'var(--radius-sm)',
                       padding: '0.5rem 0.25rem',
@@ -227,7 +238,7 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    <div style={{ fontSize: '0.76rem', fontWeight: 600, color: isSelected ? '#ffffff' : 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: '0.76rem', fontWeight: 600, color: isSelected ? 'var(--brand)' : 'var(--text-secondary)' }}>
                       {item.label}
                     </div>
                     <div style={{ fontSize: '0.68rem', color: isSelected ? 'var(--brand)' : 'var(--text-muted)', marginTop: '0.15rem' }}>
@@ -247,21 +258,26 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
               </label>
               <select
                 value={questId}
-                onChange={e => setQuestId(e.target.value)}
+                onChange={e => {
+                  setQuestId(e.target.value);
+                  setMilestoneId('');
+                  setIsAddingNewMilestone(false);
+                }}
                 style={{
                   width: '100%',
-                  background: 'rgba(16, 19, 27, 0.9)',
-                  border: '1px solid var(--border-subtle)',
-                  color: '#ffffff',
+                  background: 'var(--input-bg)',
+                  border: '1px solid var(--input-border)',
+                  color: 'var(--text-main)',
                   padding: '0.55rem 0.65rem',
                   borderRadius: 'var(--radius-md)',
                   fontSize: '0.78rem',
-                  outline: 'none'
+                  outline: 'none',
+                  colorScheme: 'var(--color-scheme)'
                 }}
               >
-                <option value="">None</option>
+                <option value="">None (Individual task)</option>
                 {state.quests.map(q => (
-                  <option key={q.id} value={q.id}>{q.title}</option>
+                  <option key={q.id} value={q.id}>{q.icon} {q.title}</option>
                 ))}
               </select>
             </div>
@@ -277,9 +293,9 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
                 onChange={e => setTagInput(e.target.value)}
                 style={{
                   width: '100%',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--border-subtle)',
-                  color: '#ffffff',
+                  background: 'var(--input-bg)',
+                  border: '1px solid var(--input-border)',
+                  color: 'var(--text-main)',
                   padding: '0.55rem 0.65rem',
                   borderRadius: 'var(--radius-md)',
                   fontSize: '0.78rem',
@@ -288,6 +304,128 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
               />
             </div>
           </div>
+
+          {/* Prompt to add under Milestone if Project is selected */}
+          {selectedQuest && (
+            <div style={{
+              padding: '0.75rem',
+              background: 'var(--bg-subtle)',
+              border: '1px solid var(--brand-border)',
+              borderRadius: 'var(--radius-md)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.45rem',
+              animation: 'fadeInDown 0.15s ease-out'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label style={{ fontSize: '0.76rem', fontWeight: 600, color: 'var(--heading-color)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Target size={13} color="var(--brand)" />
+                  <span>Assign to Milestone</span>
+                  <span style={{ fontSize: '0.64rem', color: 'var(--brand)', background: 'var(--brand-subtle)', padding: '0.05rem 0.35rem', borderRadius: '4px', fontWeight: 600 }}>
+                    Project Stage
+                  </span>
+                </label>
+
+                {!isAddingNewMilestone && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingNewMilestone(true)}
+                    className="btn btn-ghost"
+                    style={{ fontSize: '0.7rem', padding: '0.15rem 0.35rem', color: 'var(--brand)' }}
+                  >
+                    <Plus size={12} />
+                    <span>New milestone</span>
+                  </button>
+                )}
+              </div>
+
+              {!isAddingNewMilestone ? (
+                <div>
+                  <select
+                    value={milestoneId}
+                    onChange={e => {
+                      if (e.target.value === '__add_new__') {
+                        setIsAddingNewMilestone(true);
+                      } else {
+                        setMilestoneId(e.target.value);
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      background: 'var(--input-bg)',
+                      border: '1px solid var(--input-border)',
+                      color: 'var(--text-main)',
+                      padding: '0.5rem 0.65rem',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.78rem',
+                      outline: 'none',
+                      colorScheme: 'var(--color-scheme)'
+                    }}
+                  >
+                    <option value="">-- No milestone (General project deliverable) --</option>
+                    {selectedQuest.milestones.map(m => (
+                      <option key={m.id} value={m.id}>
+                        {m.title} {m.completed ? '✓ (Completed)' : ''}
+                      </option>
+                    ))}
+                    <option value="__add_new__">+ Create new milestone for {selectedQuest.title}...</option>
+                  </select>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
+                    Attaching a milestone groups this task inside the milestone dropdown and tracks progress towards project completion.
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      placeholder="e.g. Phase 2: Core Development"
+                      value={newMilestoneName}
+                      onChange={e => setNewMilestoneName(e.target.value)}
+                      autoFocus
+                      style={{
+                        flex: 1,
+                        background: 'var(--input-bg)',
+                        border: '1px solid var(--input-border)',
+                        color: 'var(--text-main)',
+                        padding: '0.45rem 0.6rem',
+                        borderRadius: 'var(--radius-sm)',
+                        fontSize: '0.78rem',
+                        outline: 'none'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!newMilestoneName.trim()) return;
+                        const createdId = await addMilestoneToQuest(questId, newMilestoneName.trim());
+                        if (createdId) {
+                          setMilestoneId(createdId);
+                          setNewMilestoneName('');
+                          setIsAddingNewMilestone(false);
+                        }
+                      }}
+                      className="btn btn-primary"
+                      style={{ fontSize: '0.72rem', padding: '0.42rem 0.65rem' }}
+                    >
+                      Add & select
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingNewMilestone(false);
+                        setNewMilestoneName('');
+                      }}
+                      className="btn btn-ghost"
+                      style={{ fontSize: '0.72rem', padding: '0.42rem 0.5rem' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>

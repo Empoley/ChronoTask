@@ -20,6 +20,7 @@ export default function Home() {
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isCreateQuestOpen, setIsCreateQuestOpen] = useState(false);
   const [taskTargetQuestId, setTaskTargetQuestId] = useState<string | undefined>(undefined);
+  const [taskTargetMilestoneId, setTaskTargetMilestoneId] = useState<string | undefined>(undefined);
 
   if (isLoading) {
     return (
@@ -47,13 +48,15 @@ export default function Home() {
     setFilterProximity(horizon);
   };
 
-  const handleOpenCreateTaskForQuest = (questId: string) => {
+  const handleOpenCreateTaskForQuest = (questId: string, milestoneId?: string) => {
     setTaskTargetQuestId(questId);
+    setTaskTargetMilestoneId(milestoneId);
     setIsCreateTaskOpen(true);
   };
 
   const handleOpenStandardCreateTask = () => {
     setTaskTargetQuestId(undefined);
+    setTaskTargetMilestoneId(undefined);
     setIsCreateTaskOpen(true);
   };
 
@@ -181,6 +184,7 @@ export default function Home() {
         isOpen={isCreateTaskOpen}
         onClose={() => setIsCreateTaskOpen(false)}
         defaultQuestId={taskTargetQuestId}
+        defaultMilestoneId={taskTargetMilestoneId}
       />
 
       <CreateQuestModal
