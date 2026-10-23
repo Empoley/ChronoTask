@@ -115,7 +115,7 @@ export function AuthModal() {
               transition: 'all 0.15s ease'
             }}
           >
-            Sign In
+            Sign in
           </button>
           <button
             type="button"
@@ -132,7 +132,7 @@ export function AuthModal() {
               transition: 'all 0.15s ease'
             }}
           >
-            Sign Up
+            Create account
           </button>
         </div>
 

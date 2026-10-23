@@ -72,12 +72,14 @@ export function CreateQuestModal({ isOpen, onClose }: CreateQuestModalProps) {
           maxHeight: '90vh',
           overflowY: 'auto',
           padding: '1.5rem',
-          background: '#12151f'
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-card)',
+          borderRadius: 'var(--radius-lg)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#ffffff' }}>
-            New Project
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
+            New project
           </h3>
           <button
             onClick={onClose}

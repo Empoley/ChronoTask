@@ -5,7 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { useAuth } from '@/context/AuthContext';
 import { Header } from '@/components/Header';
 import { WorkspaceOverview } from '@/components/WorkspaceOverview';
-import { WorkloadRadar } from '@/components/WorkloadRadar';
+import { WorkloadAlert } from '@/components/WorkloadAlert';
 import { TaskList } from '@/components/TaskList';
 import { QuestList } from '@/components/QuestList';
 import { CreateTaskModal } from '@/components/CreateTaskModal';
@@ -28,12 +28,12 @@ export default function Home() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'var(--bg-main)',
+        background: 'var(--bg-page)',
         flexDirection: 'column',
-        gap: '0.85rem'
+        gap: '0.75rem'
       }}>
-        <Loader2 size={26} className="spin" color="var(--brand)" />
-        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Connecting to workspace...</span>
+        <Loader2 size={24} className="spin" color="var(--brand)" />
+        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Connecting to workspace...</span>
       </div>
     );
   }
@@ -79,23 +79,21 @@ export default function Home() {
         padding: '1.25rem 1.5rem',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.25rem',
+        gap: '1.15rem',
         flex: 1
       }}>
-        {/* Top: Workspace Overview & Workload Radar */}
+        {/* Top Command Deck: Workspace Status & Workload Alert */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(280px, 340px) 1fr',
-          gap: '1rem',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))',
+          gap: '0.85rem',
           alignItems: 'stretch'
         }}>
           <WorkspaceOverview />
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <WorkloadRadar onFocusHorizon={handleFocusHorizon} />
-          </div>
+          <WorkloadAlert onFocusHorizon={handleFocusHorizon} />
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Primary Navigation Tabs */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -105,38 +103,42 @@ export default function Home() {
           flexWrap: 'wrap',
           gap: '0.5rem'
         }}>
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '-1px' }}>
+          <div style={{ display: 'flex', gap: '0.35rem', marginBottom: '-1px' }}>
             <button
+              type="button"
               onClick={() => setActiveMainTab('tasks')}
               className={`nav-tab ${activeMainTab === 'tasks' ? 'is-active' : ''}`}
             >
-              <CheckSquare size={15} />
+              <CheckSquare size={14} />
               <span>Tasks</span>
               <span style={{
-                fontSize: '0.72rem',
+                fontSize: '0.68rem',
                 color: activeMainTab === 'tasks' ? '#ffffff' : 'var(--text-muted)',
                 background: activeMainTab === 'tasks' ? 'var(--brand-subtle)' : 'var(--bg-subtle)',
-                padding: '0.1rem 0.45rem',
+                padding: '0.08rem 0.42rem',
                 borderRadius: '9999px',
-                border: activeMainTab === 'tasks' ? '1px solid var(--brand-border)' : '1px solid var(--border-subtle)'
+                border: activeMainTab === 'tasks' ? '1px solid var(--brand-border)' : '1px solid var(--border-subtle)',
+                fontVariantNumeric: 'tabular-nums'
               }}>
                 {pendingTasksCount}
               </span>
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveMainTab('projects')}
               className={`nav-tab ${activeMainTab === 'projects' ? 'is-active' : ''}`}
             >
-              <FolderGit2 size={15} />
+              <FolderGit2 size={14} />
               <span>Projects</span>
               <span style={{
-                fontSize: '0.72rem',
+                fontSize: '0.68rem',
                 color: activeMainTab === 'projects' ? '#ffffff' : 'var(--text-muted)',
                 background: activeMainTab === 'projects' ? 'var(--brand-subtle)' : 'var(--bg-subtle)',
-                padding: '0.1rem 0.45rem',
+                padding: '0.08rem 0.42rem',
                 borderRadius: '9999px',
-                border: activeMainTab === 'projects' ? '1px solid var(--brand-border)' : '1px solid var(--border-subtle)'
+                border: activeMainTab === 'projects' ? '1px solid var(--brand-border)' : '1px solid var(--border-subtle)',
+                fontVariantNumeric: 'tabular-nums'
               }}>
                 {state.quests.length}
               </span>
@@ -163,14 +165,14 @@ export default function Home() {
       <footer style={{
         marginTop: 'auto',
         borderTop: '1px solid var(--border-subtle)',
-        padding: '1rem 1.5rem',
-        fontSize: '0.74rem',
+        padding: '0.85rem 1.5rem',
+        fontSize: '0.72rem',
         color: 'var(--text-dim)',
-        textAlign: 'center'
+        background: 'rgba(8, 10, 15, 0.5)'
       }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
           <span>ChronoTasks</span>
-          <span>Proactive workload radar & milestone delivery management.</span>
+          <span>Proactive workload capacity radar & milestone delivery management.</span>
         </div>
       </footer>
 

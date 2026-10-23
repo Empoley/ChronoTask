@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useGame } from '@/context/GameContext';
 import { TaskCard } from './TaskCard';
 import { getTaskProximity, analyzeAllWorkloads } from '@/utils/dateUtils';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, Filter, CheckCircle2 } from 'lucide-react';
 
 interface TaskListProps {
   onOpenCreateTask: () => void;
@@ -17,7 +17,6 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
 
   const workloads = analyzeAllWorkloads(state.tasks);
 
-  // Group counts
   const counts = useMemo(() => {
     const c = {
       all: 0,
@@ -78,31 +77,41 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
     });
   }, [state.tasks, filterProximity, difficultyFilter, searchQuery]);
 
-  const tabs = [
+  const tabs: { key: string | null; label: string; count: number; isHighWorkload?: boolean }[] = [
     { key: null, label: 'All', count: counts.all },
     { key: 'today', label: 'Today', count: counts.today, isHighWorkload: workloads.today.isHighWorkload },
-    { key: 'this_week', label: 'This Week', count: counts.this_week, isHighWorkload: workloads.thisWeek.isHighWorkload },
-    { key: 'next_week', label: 'Next Week', count: counts.next_week, isHighWorkload: workloads.nextWeek.isHighWorkload },
-    { key: 'next_month', label: 'Next Month', count: counts.next_month, isHighWorkload: workloads.nextMonth.isHighWorkload },
-    { key: 'later', label: 'Later', count: counts.later, isHighWorkload: false },
-    { key: 'completed', label: 'Completed', count: counts.completed, isHighWorkload: false }
+    { key: 'this_week', label: 'This week', count: counts.this_week, isHighWorkload: workloads.thisWeek.isHighWorkload },
+    { key: 'next_week', label: 'Next week', count: counts.next_week, isHighWorkload: workloads.nextWeek.isHighWorkload },
+    { key: 'next_month', label: 'Next month', count: counts.next_month, isHighWorkload: workloads.nextMonth.isHighWorkload },
+    { key: 'later', label: 'Later', count: counts.later },
+    { key: 'completed', label: 'Completed', count: counts.completed }
   ];
 
+  const getEmptyStateMessage = () => {
+    if (searchQuery.trim()) return `No tasks match "${searchQuery}".`;
+    if (filterProximity === 'today') return 'No pending tasks scheduled for today. Horizon is clear.';
+    if (filterProximity === 'this_week') return 'No pending tasks scheduled for this week.';
+    if (filterProximity === 'next_week') return 'No pending tasks scheduled for next week.';
+    if (filterProximity === 'next_month') return 'No pending tasks scheduled for next month.';
+    if (filterProximity === 'completed') return 'No completed tasks recorded yet.';
+    return 'Your workspace has no pending tasks.';
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {/* Tab Navigation & Controls */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+      {/* Tab Navigation & Search Controls */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '0.75rem'
+        gap: '0.65rem'
       }}>
-        {/* Clean Proximity Tabs */}
+        {/* Proximity Filter Tabs */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.35rem',
+          gap: '0.25rem',
           flexWrap: 'wrap'
         }}>
           {tabs.map(tab => {
@@ -110,6 +119,7 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
             return (
               <button
                 key={tab.key ?? 'all'}
+                type="button"
                 onClick={() => setFilterProximity(tab.key)}
                 className={`proximity-tab ${isSelected ? 'is-active' : ''}`}
               >
@@ -118,23 +128,22 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
                   fontSize: '0.68rem',
                   color: isSelected ? '#ffffff' : 'var(--text-muted)',
                   background: isSelected ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
-                  padding: '0.08rem 0.38rem',
+                  padding: '0.06rem 0.35rem',
                   borderRadius: '9999px',
-                  marginLeft: '0.15rem'
+                  fontVariantNumeric: 'tabular-nums'
                 }}>
                   {tab.count}
                 </span>
 
-                {/* Warning indicator for high workload */}
                 {tab.isHighWorkload && (
                   <span
-                    title="High workload"
+                    title="High workload alert"
                     style={{
-                      width: '6px',
-                      height: '6px',
+                      width: '5px',
+                      height: '5px',
                       borderRadius: '50%',
-                      background: '#f97316',
-                      marginLeft: '0.2rem'
+                      background: '#f59e0b',
+                      marginLeft: '0.1rem'
                     }}
                   />
                 )}
@@ -143,8 +152,8 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
           })}
         </div>
 
-        {/* Search & Filter */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+        {/* Search & Filter Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <Search size={13} color="var(--text-muted)" style={{ position: 'absolute', left: '0.65rem' }} />
             <input
@@ -153,14 +162,15 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               style={{
-                background: 'rgba(255, 255, 255, 0.04)',
+                background: 'rgba(255, 255, 255, 0.035)',
                 border: '1px solid var(--border-subtle)',
                 color: '#ffffff',
-                padding: '0.38rem 0.65rem 0.38rem 2rem',
+                padding: '0.36rem 0.65rem 0.36rem 2rem',
                 borderRadius: 'var(--radius-md)',
                 fontSize: '0.78rem',
                 outline: 'none',
-                width: '150px'
+                width: '180px',
+                transition: 'border-color 0.15s ease'
               }}
             />
           </div>
@@ -169,17 +179,17 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
             value={difficultyFilter}
             onChange={e => setDifficultyFilter(e.target.value)}
             style={{
-              background: 'rgba(16, 19, 27, 0.9)',
+              background: '#121622',
               border: '1px solid var(--border-subtle)',
               color: 'var(--text-secondary)',
-              padding: '0.38rem 0.65rem',
+              padding: '0.36rem 0.65rem',
               borderRadius: 'var(--radius-md)',
-              fontSize: '0.78rem',
+              fontSize: '0.76rem',
               outline: 'none',
               cursor: 'pointer'
             }}
           >
-            <option value="all">All Difficulties</option>
+            <option value="all">All priorities</option>
             <option value="easy">Easy</option>
             <option value="medium">Medium</option>
             <option value="hard">Hard</option>
@@ -188,30 +198,51 @@ export function TaskList({ onOpenCreateTask }: TaskListProps) {
         </div>
       </div>
 
-      {/* Task List */}
+      {/* Task List or Empty State */}
       {filteredTasks.length === 0 ? (
         <div className="clean-card" style={{
           padding: '2.5rem 1.5rem',
-          textAlign: 'center'
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0.65rem'
         }}>
-          <h4 style={{ fontSize: '0.95rem', color: '#ffffff', marginBottom: '0.25rem' }}>
-            No tasks in this view
-          </h4>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-            {filterProximity === 'next_week'
-              ? 'No pending tasks scheduled for next week.'
-              : 'Add a new task to organize your schedule and milestones.'}
-          </p>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            background: 'var(--bg-subtle)',
+            border: '1px solid var(--border-subtle)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--text-muted)'
+          }}>
+            <CheckCircle2 size={18} />
+          </div>
+
+          <div>
+            <h4 style={{ fontSize: '0.9rem', color: '#ffffff', marginBottom: '0.2rem' }}>
+              {getEmptyStateMessage()}
+            </h4>
+            <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', maxWidth: '320px', margin: '0 auto' }}>
+              Create a new task to organize your upcoming deliverables and deadlines.
+            </p>
+          </div>
+
           <button
+            type="button"
             onClick={onOpenCreateTask}
             className="btn btn-primary"
+            style={{ marginTop: '0.4rem', fontSize: '0.78rem' }}
           >
-            <Plus size={14} />
-            <span>Create task</span>
+            <Plus size={13} strokeWidth={2.5} />
+            <span>New task</span>
           </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {filteredTasks.map(task => (
             <TaskCard key={task.id} task={task} />
           ))}

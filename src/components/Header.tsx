@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '@/context/GameContext';
 import { useAuth } from '@/context/AuthContext';
-import { CheckSquare, Volume2, VolumeX, RotateCcw, Plus, FolderPlus, FolderGit2, User as UserIcon, LogOut, Cloud } from 'lucide-react';
+import { CheckSquare, Volume2, VolumeX, RotateCcw, Plus, FolderPlus, FolderGit2, User as UserIcon, LogOut, Cloud, Mail } from 'lucide-react';
+import { CollaborationInvitesPopover } from './CollaborationInvitesPopover';
 
 interface HeaderProps {
   onOpenCreateTask: () => void;
@@ -11,22 +12,24 @@ interface HeaderProps {
 }
 
 export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
-  const { state, isSoundMuted, toggleSoundMuted, resetDemoData, isCloudSynced } = useGame();
+  const { state, pendingInvites, isSoundMuted, toggleSoundMuted, resetDemoData, isCloudSynced } = useGame();
   const { user, signOut, openAuthModal } = useAuth();
+  const [isInvitesOpen, setIsInvitesOpen] = useState(false);
   const { tasks, quests } = state;
 
   const completedCount = tasks.filter(t => t.completed).length;
   const totalTasks = tasks.length;
+  const activeProjectsCount = quests.filter(q => !q.completed).length;
 
   return (
     <header style={{
       borderBottom: '1px solid var(--border-subtle)',
-      background: 'rgba(10, 12, 16, 0.8)',
+      background: 'rgba(8, 10, 15, 0.85)',
       backdropFilter: 'blur(16px)',
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      padding: '0.75rem 1.5rem'
+      padding: '0.65rem 1.5rem'
     }}>
       <div style={{
         maxWidth: '1280px',
@@ -37,147 +40,184 @@ export function Header({ onOpenCreateTask, onOpenCreateQuest }: HeaderProps) {
         flexWrap: 'wrap',
         gap: '0.75rem'
       }}>
-        {/* Brand */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '8px',
-            background: 'var(--brand-subtle)',
-            border: '1px solid var(--brand-border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--brand)'
-          }}>
-            <CheckSquare size={17} />
-          </div>
-          <div>
-            <span style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>
+        {/* Left: Brand Identity & Quick Stats */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+            <div style={{
+              width: '30px',
+              height: '30px',
+              borderRadius: '7px',
+              background: 'var(--brand-subtle)',
+              border: '1px solid var(--brand-border)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--brand)'
+            }}>
+              <CheckSquare size={16} />
+            </div>
+            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>
               ChronoTasks
+            </span>
+          </div>
+
+          <div style={{
+            width: '1px',
+            height: '16px',
+            background: 'var(--border-subtle)',
+            margin: '0 0.15rem'
+          }} />
+
+          {/* Quiet Status Counters */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <strong style={{ color: '#ffffff', fontVariantNumeric: 'tabular-nums' }}>{completedCount}</strong>
+              <span style={{ color: 'var(--text-muted)' }}>/ {totalTasks} done</span>
+            </span>
+            <span style={{ color: 'var(--text-dim)' }}>·</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+              <strong style={{ color: '#ffffff', fontVariantNumeric: 'tabular-nums' }}>{activeProjectsCount}</strong>
+              <span style={{ color: 'var(--text-muted)' }}>active {activeProjectsCount === 1 ? 'project' : 'projects'}</span>
             </span>
           </div>
         </div>
 
-        {/* Quick Stats & Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flexWrap: 'wrap' }}>
-          {/* Completed capsule */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.45rem',
-            background: 'var(--bg-subtle)',
-            border: '1px solid var(--border-subtle)',
-            padding: '0.3rem 0.65rem',
-            borderRadius: 'var(--radius-md)',
-            fontSize: '0.76rem'
-          }}>
-            <CheckSquare size={13} color="var(--accent-green)" />
-            <span style={{ color: 'var(--text-secondary)' }}>
-              <strong style={{ color: '#ffffff' }}>{completedCount}</strong>/{totalTasks} completed
-            </span>
-          </div>
-
-          {/* Projects capsule */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.35rem',
-            background: 'var(--bg-subtle)',
-            border: '1px solid var(--border-subtle)',
-            padding: '0.3rem 0.65rem',
-            borderRadius: 'var(--radius-md)',
-            fontSize: '0.76rem',
-            color: 'var(--text-secondary)'
-          }}>
-            <FolderGit2 size={13} color="var(--brand)" />
-            <span style={{ color: '#ffffff', fontWeight: 600 }}>{quests.filter(q => !q.completed).length}</span>
-            <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>projects</span>
-          </div>
-
-          {/* User Account / Auth Status */}
-          {user ? (
-            <div
-              title={isCloudSynced ? 'Realtime Cloud Connected' : 'Syncing...'}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                background: 'var(--bg-subtle)',
-                border: '1px solid var(--border-subtle)',
-                padding: '0.25rem 0.65rem',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '0.76rem'
-              }}
-            >
-              <Cloud size={13} color={isCloudSynced ? 'var(--accent-green)' : 'var(--accent-gold)'} />
-              <span style={{ color: '#ffffff', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {user.email}
-              </span>
+        {/* Right: Utilities & Primary Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {/* Collaboration Invites Popover Button */}
+          {user && (
+            <div style={{ position: 'relative' }}>
               <button
-                onClick={signOut}
-                title="Sign out of account"
-                className="btn btn-ghost"
-                style={{ padding: '0.2rem', color: 'var(--text-muted)' }}
-              >
-                <LogOut size={13} />
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <button
-                onClick={() => openAuthModal('signin')}
+                id="collaboration-invites-btn"
+                onClick={() => setIsInvitesOpen(prev => !prev)}
                 className="btn btn-secondary"
-                style={{ fontSize: '0.76rem', padding: '0.38rem 0.75rem' }}
+                style={{
+                  padding: '0.3rem 0.65rem',
+                  fontSize: '0.76rem',
+                  background: isInvitesOpen 
+                    ? 'rgba(99, 102, 241, 0.16)' 
+                    : (pendingInvites.length > 0 ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-subtle)'),
+                  borderColor: (pendingInvites.length > 0 || isInvitesOpen)
+                    ? 'rgba(99, 102, 241, 0.45)'
+                    : 'var(--border-subtle)',
+                  color: (pendingInvites.length > 0 || isInvitesOpen) ? '#ffffff' : 'var(--text-secondary)'
+                }}
+                title={pendingInvites.length > 0 ? `${pendingInvites.length} pending collaboration invite(s)` : 'Collaboration invites'}
               >
-                <UserIcon size={13} />
-                <span>Sign in</span>
+                <Mail size={13} color={(pendingInvites.length > 0 || isInvitesOpen) ? 'var(--brand)' : 'currentColor'} />
+                <span>Invites</span>
+                {pendingInvites.length > 0 && (
+                  <span
+                    className="invite-badge-pulse"
+                    style={{
+                      background: 'var(--brand)',
+                      color: '#ffffff',
+                      fontSize: '0.64rem',
+                      fontWeight: 700,
+                      padding: '0.08rem 0.4rem',
+                      borderRadius: '9999px',
+                      lineHeight: 1
+                    }}
+                  >
+                    {pendingInvites.length}
+                  </span>
+                )}
               </button>
+
+              <CollaborationInvitesPopover
+                isOpen={isInvitesOpen}
+                onClose={() => setIsInvitesOpen(false)}
+              />
             </div>
           )}
 
           {/* Audio toggle */}
           <button
             onClick={toggleSoundMuted}
-            title={isSoundMuted ? 'Unmute sounds' : 'Mute sounds'}
+            title={isSoundMuted ? 'Unmute notification sounds' : 'Mute notification sounds'}
             className="btn btn-ghost"
-            style={{ padding: '0.35rem', borderRadius: '6px' }}
+            style={{ padding: '0.35rem', borderRadius: 'var(--radius-sm)' }}
           >
-            {isSoundMuted ? <VolumeX size={15} color="var(--text-muted)" /> : <Volume2 size={15} color="var(--text-secondary)" />}
+            {isSoundMuted ? <VolumeX size={14} color="var(--text-muted)" /> : <Volume2 size={14} color="var(--text-secondary)" />}
           </button>
 
-          {/* Reset Demo button */}
+          {/* Reset button (discreet) */}
           <button
             onClick={() => {
               if (window.confirm('Reset workspace back to default state?')) {
                 resetDemoData();
               }
             }}
-            title="Reset workspace"
+            title="Reset demo data"
             className="btn btn-ghost"
-            style={{ padding: '0.35rem 0.6rem', fontSize: '0.74rem' }}
+            style={{ padding: '0.3rem 0.5rem', fontSize: '0.74rem', color: 'var(--text-muted)' }}
           >
-            <RotateCcw size={13} style={{ marginRight: '0.25rem' }} />
-            Reset
+            <RotateCcw size={12} style={{ marginRight: '0.2rem' }} />
+            <span>Reset</span>
           </button>
 
-          {/* Create Project */}
+          {/* User Account / Auth Capsule */}
+          {user ? (
+            <div
+              title={isCloudSynced ? 'Synced in realtime with Supabase cloud' : 'Connecting to cloud...'}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                background: 'var(--bg-subtle)',
+                border: '1px solid var(--border-subtle)',
+                padding: '0.25rem 0.6rem',
+                borderRadius: 'var(--radius-md)',
+                fontSize: '0.75rem'
+              }}
+            >
+              <Cloud size={12} color={isCloudSynced ? 'var(--accent-green)' : 'var(--accent-time)'} />
+              <span style={{ color: 'var(--text-secondary)', maxWidth: '135px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {user.email}
+              </span>
+              <button
+                onClick={signOut}
+                title="Sign out of account"
+                className="btn btn-ghost"
+                style={{ padding: '0.15rem', color: 'var(--text-muted)' }}
+              >
+                <LogOut size={12} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => openAuthModal('signin')}
+              className="btn btn-secondary"
+              style={{ fontSize: '0.76rem', padding: '0.32rem 0.7rem' }}
+            >
+              <UserIcon size={12} />
+              <span>Sign in</span>
+            </button>
+          )}
+
+          <div style={{
+            width: '1px',
+            height: '16px',
+            background: 'var(--border-subtle)',
+            margin: '0 0.15rem'
+          }} />
+
+          {/* Primary Action Buttons */}
           <button
             onClick={onOpenCreateQuest}
             className="btn btn-secondary"
-            style={{ fontSize: '0.78rem', padding: '0.42rem 0.8rem' }}
+            style={{ fontSize: '0.78rem', padding: '0.4rem 0.8rem' }}
           >
-            <FolderPlus size={14} />
+            <FolderPlus size={13} />
             <span>New project</span>
           </button>
 
-          {/* Create Task CTA */}
           <button
             onClick={onOpenCreateTask}
             className="btn btn-primary"
-            style={{ fontSize: '0.78rem', padding: '0.42rem 0.95rem' }}
+            style={{ fontSize: '0.78rem', padding: '0.4rem 0.9rem' }}
           >
-            <Plus size={15} strokeWidth={2.5} />
+            <Plus size={14} strokeWidth={2.5} />
             <span>New task</span>
           </button>
         </div>

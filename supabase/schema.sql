@@ -117,6 +117,21 @@ AS $$
     SELECT 1 FROM public.project_members
     WHERE project_id = p_id 
       AND (user_id = auth.uid() OR lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')))
+      AND status = 'accepted'
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_project_member_or_invited(p_id TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.project_members
+    WHERE project_id = p_id 
+      AND (user_id = auth.uid() OR lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')))
   );
 $$;
 
@@ -135,6 +150,7 @@ AS $$
     WHERE project_id = p_id 
       AND (user_id = auth.uid() OR lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')))
       AND role IN ('owner', 'editor')
+      AND status = 'accepted'
   );
 $$;
 
@@ -157,7 +173,9 @@ CREATE POLICY "Projects viewable by owner or members"
   ON public.projects FOR SELECT
   TO authenticated
   USING (
-    owner_id = auth.uid() OR public.is_project_collaborator(id)
+    owner_id = auth.uid() OR 
+    public.is_project_collaborator(id) OR 
+    public.is_project_member_or_invited(id)
   );
 
 DROP POLICY IF EXISTS "Projects insertable by owner" ON public.projects;
@@ -194,6 +212,21 @@ CREATE POLICY "Members insertable by project owner"
   ON public.project_members FOR INSERT
   TO authenticated
   WITH CHECK (
+    public.is_project_owner(project_id)
+  );
+
+DROP POLICY IF EXISTS "Members updatable by invited user or project owner" ON public.project_members;
+CREATE POLICY "Members updatable by invited user or project owner"
+  ON public.project_members FOR UPDATE
+  TO authenticated
+  USING (
+    user_id = auth.uid() OR
+    lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')) OR
+    public.is_project_owner(project_id)
+  )
+  WITH CHECK (
+    user_id = auth.uid() OR
+    lower(user_email) = lower(coalesce(auth.jwt()->>'email', '')) OR
     public.is_project_owner(project_id)
   );
 

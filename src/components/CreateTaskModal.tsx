@@ -80,12 +80,14 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
           maxHeight: '90vh',
           overflowY: 'auto',
           padding: '1.5rem',
-          background: '#12151f'
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-card)',
+          borderRadius: 'var(--radius-lg)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#ffffff' }}>
-            New Task
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
+            New task
           </h3>
           <button
             onClick={onClose}
@@ -110,7 +112,7 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
               onChange={e => setTitle(e.target.value)}
               style={{
                 width: '100%',
-                background: 'rgba(255, 255, 255, 0.05)',
+                background: 'rgba(255, 255, 255, 0.04)',
                 border: '1px solid var(--border-subtle)',
                 color: '#ffffff',
                 padding: '0.55rem 0.75rem',
@@ -133,7 +135,7 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
               onChange={e => setDescription(e.target.value)}
               style={{
                 width: '100%',
-                background: 'rgba(255, 255, 255, 0.05)',
+                background: 'rgba(255, 255, 255, 0.04)',
                 border: '1px solid var(--border-subtle)',
                 color: '#ffffff',
                 padding: '0.55rem 0.75rem',
@@ -164,21 +166,21 @@ export function CreateTaskModal({ isOpen, onClose, defaultQuestId }: CreateTaskM
                   onClick={() => setDeadline(getDefaultDateTime(3))}
                   style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.7rem', padding: '0.15rem 0.4rem', cursor: 'pointer' }}
                 >
-                  This Week
+                  This week
                 </button>
                 <button
                   type="button"
                   onClick={() => setDeadline(getDefaultDateTime(8))}
                   style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.7rem', padding: '0.15rem 0.4rem', cursor: 'pointer' }}
                 >
-                  Next Week
+                  Next week
                 </button>
                 <button
                   type="button"
                   onClick={() => setDeadline(getDefaultDateTime(25))}
                   style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.7rem', padding: '0.15rem 0.4rem', cursor: 'pointer' }}
                 >
-                  Next Month
+                  Next month
                 </button>
               </div>
             </div>

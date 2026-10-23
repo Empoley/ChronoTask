@@ -19,7 +19,6 @@ export function TaskCard({ task }: TaskCardProps) {
   const [noteText, setNoteText] = useState(task.notes || '');
   const [isSavedFeedback, setIsSavedFeedback] = useState(false);
 
-  // Sync with prop changes if task updates
   useEffect(() => {
     setNoteText(task.notes || '');
   }, [task.notes]);
@@ -27,32 +26,20 @@ export function TaskCard({ task }: TaskCardProps) {
   const quest = task.questId ? state.quests.find(q => q.id === task.questId) : null;
 
   const difficultyMeta: Record<string, { label: string; badgeClass: string }> = {
-    easy: {
-      label: 'Easy',
-      badgeClass: 'badge-easy'
-    },
-    medium: {
-      label: 'Medium',
-      badgeClass: 'badge-medium'
-    },
-    hard: {
-      label: 'Hard',
-      badgeClass: 'badge-hard'
-    },
-    epic: {
-      label: 'Epic',
-      badgeClass: 'badge-epic'
-    }
+    easy: { label: 'Easy', badgeClass: 'badge-easy' },
+    medium: { label: 'Medium', badgeClass: 'badge-medium' },
+    hard: { label: 'Hard', badgeClass: 'badge-hard' },
+    epic: { label: 'Epic', badgeClass: 'badge-epic' }
   };
 
   const diff = difficultyMeta[task.difficulty] || difficultyMeta.medium;
 
   const proximityLabels: Record<string, string> = {
     overdue: 'Overdue',
-    today: 'Due Today',
-    this_week: 'This Week',
-    next_week: 'Next Week',
-    next_month: 'Next Month',
+    today: 'Due today',
+    this_week: 'This week',
+    next_week: 'Next week',
+    next_month: 'Next month',
     later: 'Later'
   };
 
@@ -64,17 +51,20 @@ export function TaskCard({ task }: TaskCardProps) {
     }, 2000);
   };
 
+  const isDueSoon = proximity === 'overdue' || proximity === 'today';
+
   return (
     <div className={`task-item status-${proximity} ${task.completed ? 'is-completed' : ''}`}>
-      {/* Main Row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
-        {/* Checkbox */}
+      {/* Primary Card Row */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+        {/* Custom tactile checkbox */}
         <button
+          type="button"
           onClick={() => toggleTaskComplete(task.id)}
           title={task.completed ? 'Mark incomplete' : 'Mark complete'}
           style={{
-            width: '20px',
-            height: '20px',
+            width: '18px',
+            height: '18px',
             borderRadius: '5px',
             background: task.completed ? 'var(--accent-green)' : 'rgba(255, 255, 255, 0.04)',
             border: task.completed ? '1px solid var(--accent-green)' : '1px solid var(--border-card)',
@@ -84,20 +74,20 @@ export function TaskCard({ task }: TaskCardProps) {
             justifyContent: 'center',
             cursor: 'pointer',
             flexShrink: 0,
-            marginTop: '0.2rem',
+            marginTop: '0.15rem',
             transition: 'all 0.15s ease'
           }}
         >
-          <Check size={13} strokeWidth={3} />
+          <Check size={12} strokeWidth={3} />
         </button>
 
-        {/* Task Details Header */}
+        {/* Task Content */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '0.5rem' }}>
             <h4
               onClick={() => setIsExpanded(prev => !prev)}
               style={{
-                fontSize: '0.92rem',
+                fontSize: '0.9rem',
                 fontWeight: 500,
                 color: task.completed ? 'var(--text-muted)' : '#ffffff',
                 textDecoration: task.completed ? 'line-through' : 'none',
@@ -105,45 +95,46 @@ export function TaskCard({ task }: TaskCardProps) {
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.35rem'
+                gap: '0.4rem'
               }}
             >
               <span>{task.title}</span>
               {task.notes && (
                 <span title="Has progress notes" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                  <FileText size={12} color="var(--brand)" />
+                  <FileText size={11} color="var(--brand)" />
                 </span>
               )}
             </h4>
 
-            {/* Actions: Notes toggle & Delete */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            {/* Quick Actions */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               <button
+                type="button"
                 onClick={() => setIsExpanded(prev => !prev)}
-                title={isExpanded ? 'Collapse notes' : 'Write progress notes'}
+                title={isExpanded ? 'Collapse notes' : 'View progress notes'}
                 className="btn btn-ghost"
                 style={{
-                  padding: '0.2rem 0.4rem',
+                  padding: '0.15rem 0.35rem',
                   fontSize: '0.72rem',
                   color: isExpanded ? 'var(--brand)' : 'var(--text-muted)'
                 }}
               >
-                <FileText size={12} />
-                <span>{isExpanded ? 'Close' : 'Notes'}</span>
-                {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                <FileText size={11} />
+                <span>{isExpanded ? 'Hide' : 'Notes'}</span>
+                {isExpanded ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
               </button>
 
               <button
+                type="button"
                 onClick={() => deleteTask(task.id)}
                 title="Delete task"
                 className="btn btn-ghost"
                 style={{
-                  padding: '0.2rem',
-                  color: 'var(--text-dim)',
-                  lineHeight: 1
+                  padding: '0.15rem',
+                  color: 'var(--text-dim)'
                 }}
               >
-                <Trash2 size={13} />
+                <Trash2 size={12} />
               </button>
             </div>
           </div>
@@ -152,10 +143,10 @@ export function TaskCard({ task }: TaskCardProps) {
             <p
               onClick={() => setIsExpanded(prev => !prev)}
               style={{
-                fontSize: '0.8rem',
+                fontSize: '0.78rem',
                 color: 'var(--text-secondary)',
-                marginTop: '0.25rem',
-                lineHeight: 1.35,
+                marginTop: '0.2rem',
+                lineHeight: 1.4,
                 cursor: 'pointer'
               }}
             >
@@ -163,54 +154,55 @@ export function TaskCard({ task }: TaskCardProps) {
             </p>
           )}
 
-          {/* Clean Meta Row */}
+          {/* Unified Metadata Row */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
             flexWrap: 'wrap',
             gap: '0.45rem',
-            marginTop: '0.5rem',
-            fontSize: '0.74rem'
+            marginTop: '0.45rem',
+            fontSize: '0.72rem'
           }}>
-            {/* Proximity badge */}
+            {/* Horizon Proximity Pill */}
             <span className={`badge badge-proximity-${proximity}`}>
               {proximityLabels[proximity] || 'Scheduled'}
             </span>
 
-            {/* Difficulty rating */}
+            {/* Priority Indicator */}
             <span className={`badge ${diff.badgeClass}`}>
               {diff.label}
             </span>
 
-            {/* Project tag if present */}
+            {/* Project Pill if associated */}
             {quest && (
               <span style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.3rem',
+                gap: '0.25rem',
                 color: 'var(--text-secondary)',
                 background: 'var(--bg-subtle)',
                 border: '1px solid var(--border-subtle)',
-                padding: '0.15rem 0.45rem',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: '0.72rem'
+                padding: '0.12rem 0.45rem',
+                borderRadius: '4px',
+                fontSize: '0.7rem'
               }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: quest.color }} />
+                <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: quest.color }} />
                 <span>{quest.title}</span>
               </span>
             )}
 
-            {/* Deadline date */}
+            {/* Deadline information */}
             <span style={{
-              color: relativeTime.isPast ? '#f87171' : 'var(--text-muted)',
+              color: isDueSoon ? '#fbbf24' : 'var(--text-muted)',
               marginLeft: 'auto',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.35rem'
+              gap: '0.3rem',
+              fontVariantNumeric: 'tabular-nums'
             }}>
-              <Calendar size={12} />
+              <Calendar size={11} />
               <span>{formatDeadline(task.deadline)}</span>
-              <span style={{ color: relativeTime.isPast ? '#f87171' : 'var(--text-dim)' }}>
+              <span style={{ color: isDueSoon ? '#f59e0b' : 'var(--text-dim)', fontSize: '0.68rem' }}>
                 ({relativeTime.text})
               </span>
             </span>
@@ -218,11 +210,11 @@ export function TaskCard({ task }: TaskCardProps) {
         </div>
       </div>
 
-      {/* Expandable Progress Notes Section */}
+      {/* Progress Notes Drawer */}
       {isExpanded && (
         <div style={{
-          marginTop: '0.35rem',
-          paddingTop: '0.65rem',
+          marginTop: '0.25rem',
+          paddingTop: '0.6rem',
           borderTop: '1px solid var(--border-subtle)',
           display: 'flex',
           flexDirection: 'column',
@@ -236,8 +228,8 @@ export function TaskCard({ task }: TaskCardProps) {
             color: 'var(--text-secondary)'
           }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 600 }}>
-              <FileText size={12} color="var(--brand)" />
-              <span>Progress notes</span>
+              <FileText size={11} color="var(--brand)" />
+              <span>Progress notes & blockers</span>
             </span>
           </div>
 
@@ -246,16 +238,16 @@ export function TaskCard({ task }: TaskCardProps) {
             value={noteText}
             onChange={e => setNoteText(e.target.value)}
             onBlur={handleSaveNotes}
-            placeholder="Write your progress notes, steps completed, or blockers..."
+            placeholder="Record task status, key decisions, or next steps..."
             style={{
               width: '100%',
-              background: 'rgba(255, 255, 255, 0.04)',
+              background: 'rgba(255, 255, 255, 0.035)',
               border: '1px solid var(--border-card)',
               color: '#ffffff',
-              padding: '0.5rem 0.65rem',
+              padding: '0.45rem 0.65rem',
               borderRadius: 'var(--radius-sm)',
-              fontSize: '0.8rem',
-              lineHeight: 1.4,
+              fontSize: '0.78rem',
+              lineHeight: 1.45,
               outline: 'none',
               resize: 'vertical',
               fontFamily: 'inherit'
@@ -265,16 +257,17 @@ export function TaskCard({ task }: TaskCardProps) {
           <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.5rem' }}>
             {isSavedFeedback && (
               <span style={{ fontSize: '0.72rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                <CheckCheck size={13} />
+                <CheckCheck size={12} />
                 <span>Notes saved</span>
               </span>
             )}
             <button
+              type="button"
               onClick={handleSaveNotes}
               className="btn btn-secondary"
-              style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem' }}
+              style={{ fontSize: '0.72rem', padding: '0.22rem 0.55rem' }}
             >
-              <Save size={12} />
+              <Save size={11} />
               <span>Save notes</span>
             </button>
           </div>

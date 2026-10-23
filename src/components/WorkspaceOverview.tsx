@@ -3,7 +3,7 @@
 import React from 'react';
 import { useGame } from '@/context/GameContext';
 import { getTaskProximity } from '@/utils/dateUtils';
-import { CheckCircle2, Layers, FolderGit2 } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 export function WorkspaceOverview() {
   const { state } = useGame();
@@ -22,14 +22,20 @@ export function WorkspaceOverview() {
   }).length;
 
   return (
-    <div className="clean-card" style={{ padding: '1.25rem' }}>
+    <div className="clean-card" style={{
+      padding: '1.15rem 1.25rem',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      gap: '0.85rem'
+    }}>
       {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.15rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem' }}>
           <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '10px',
+            width: '28px',
+            height: '28px',
+            borderRadius: '6px',
             background: 'var(--brand-subtle)',
             border: '1px solid var(--brand-border)',
             display: 'flex',
@@ -38,34 +44,34 @@ export function WorkspaceOverview() {
             color: 'var(--brand)',
             flexShrink: 0
           }}>
-            <Layers size={21} />
+            <Layers size={15} />
           </div>
 
           <div>
-            <h2 style={{ fontSize: '0.98rem', fontWeight: 600, color: '#ffffff', letterSpacing: '-0.01em' }}>
-              Workspace
-            </h2>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-              Personal productivity and horizon tracking
+            <h3 style={{ fontSize: '0.92rem', fontWeight: 600, color: '#ffffff', margin: 0 }}>
+              Workspace Status
+            </h3>
+            <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '0.1rem' }}>
+              Execution pace & completion rate
             </p>
           </div>
         </div>
       </div>
 
-      {/* Completion Progress Bar */}
-      <div style={{ marginBottom: '1.15rem' }}>
+      {/* Completion Progress Strip */}
+      <div>
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           fontSize: '0.74rem',
-          marginBottom: '0.4rem'
+          marginBottom: '0.35rem'
         }}>
           <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
-            Task completion
+            Overall progress
           </span>
-          <span style={{ color: 'var(--text-muted)' }}>
-            <strong style={{ color: '#ffffff' }}>{completedCount}</strong> / {totalTasks} ({completionRate}%)
+          <span style={{ color: 'var(--text-muted)', fontVariantNumeric: 'tabular-nums' }}>
+            <strong style={{ color: '#ffffff' }}>{completedCount}</strong> of {totalTasks} ({completionRate}%)
           </span>
         </div>
         <div style={{
@@ -79,15 +85,15 @@ export function WorkspaceOverview() {
             style={{
               height: '100%',
               width: `${completionRate}%`,
-              background: 'var(--brand)',
+              background: 'linear-gradient(90deg, #6366f1, #818cf8)',
               borderRadius: '9999px',
-              transition: 'width 0.3s ease'
+              transition: 'width 0.4s ease'
             }}
           />
         </div>
       </div>
 
-      {/* 3 Metric Summary Boxes */}
+      {/* 3 Metrics Row */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
@@ -97,24 +103,24 @@ export function WorkspaceOverview() {
           background: 'var(--bg-subtle)',
           border: '1px solid var(--border-subtle)',
           borderRadius: 'var(--radius-sm)',
-          padding: '0.55rem 0.45rem',
+          padding: '0.5rem',
           textAlign: 'center'
         }}>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }}>Pending</div>
-          <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#ffffff', marginTop: '0.15rem' }}>
+          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Pending</div>
+          <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ffffff', marginTop: '0.1rem', fontVariantNumeric: 'tabular-nums' }}>
             {pendingCount}
           </div>
         </div>
 
         <div style={{
-          background: 'var(--bg-subtle)',
-          border: '1px solid var(--border-subtle)',
+          background: dueSoonCount > 0 ? 'var(--accent-time-subtle)' : 'var(--bg-subtle)',
+          border: `1px solid ${dueSoonCount > 0 ? 'var(--accent-time-border)' : 'var(--border-subtle)'}`,
           borderRadius: 'var(--radius-sm)',
-          padding: '0.55rem 0.45rem',
+          padding: '0.5rem',
           textAlign: 'center'
         }}>
-          <div style={{ fontSize: '0.72rem', color: dueSoonCount > 0 ? '#f87171' : 'var(--text-muted)', fontWeight: 400 }}>Due soon</div>
-          <div style={{ fontSize: '1.25rem', fontWeight: 700, color: dueSoonCount > 0 ? '#f87171' : '#ffffff', marginTop: '0.15rem' }}>
+          <div style={{ fontSize: '0.68rem', color: dueSoonCount > 0 ? '#fbbf24' : 'var(--text-muted)' }}>Due today</div>
+          <div style={{ fontSize: '1.2rem', fontWeight: 700, color: dueSoonCount > 0 ? '#fbbf24' : '#ffffff', marginTop: '0.1rem', fontVariantNumeric: 'tabular-nums' }}>
             {dueSoonCount}
           </div>
         </div>
@@ -123,16 +129,15 @@ export function WorkspaceOverview() {
           background: 'var(--bg-subtle)',
           border: '1px solid var(--border-subtle)',
           borderRadius: 'var(--radius-sm)',
-          padding: '0.55rem 0.45rem',
+          padding: '0.5rem',
           textAlign: 'center'
         }}>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }}>Projects</div>
-          <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#ffffff', marginTop: '0.15rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
-            <span>{quests.filter(q => !q.completed).length}</span>
+          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Projects</div>
+          <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ffffff', marginTop: '0.1rem', fontVariantNumeric: 'tabular-nums' }}>
+            {quests.filter(q => !q.completed).length}
           </div>
         </div>
       </div>
-
     </div>
   );
 }

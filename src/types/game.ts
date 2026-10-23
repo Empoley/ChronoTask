@@ -40,6 +40,23 @@ export interface Quest {
   completedAt?: string;
 }
 
+export interface CollaborationInvite {
+  id: string;
+  projectId: string;
+  userEmail: string;
+  role: 'editor' | 'viewer';
+  status: 'pending' | 'accepted';
+  createdAt?: string;
+  project?: {
+    id: string;
+    title: string;
+    description?: string;
+    color?: string;
+    icon?: string;
+    ownerId?: string;
+  };
+}
+
 export interface GameState {
   tasks: Task[];
   quests: Quest[];

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Lock, Mail, User as UserIcon, Eye, EyeOff, AlertCircle, CheckCircle2, ShieldCheck, Users, BellRing, ArrowRight } from 'lucide-react';
+import { Lock, Mail, User as UserIcon, Eye, EyeOff, AlertCircle, CheckCircle2, ShieldCheck, Users, BellRing, ArrowRight, CheckSquare } from 'lucide-react';
 
 export function AuthGate() {
   const { signIn, signUp, isSupabaseReady } = useAuth();
@@ -50,52 +50,51 @@ export function AuthGate() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '1.5rem',
-      background: 'radial-gradient(ellipse at 50% 20%, rgba(249, 115, 22, 0.08) 0%, rgba(11, 15, 23, 1) 75%)'
+      background: 'radial-gradient(ellipse at 50% 15%, rgba(99, 102, 241, 0.08) 0%, rgba(8, 10, 15, 1) 75%)'
     }}>
       <div style={{
-        maxWidth: '460px',
+        maxWidth: '440px',
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.5rem'
+        gap: '1.25rem'
       }}>
         {/* Brand Header */}
         <div style={{ textAlign: 'center' }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.35rem 0.85rem',
-            borderRadius: '9999px',
-            background: 'rgba(249, 115, 22, 0.12)',
-            border: '1px solid rgba(249, 115, 22, 0.25)',
+            justifyContent: 'center',
+            width: '42px',
+            height: '42px',
+            borderRadius: '10px',
+            background: 'var(--brand-subtle)',
+            border: '1px solid var(--brand-border)',
+            color: 'var(--brand)',
             marginBottom: '0.85rem'
           }}>
-            <ShieldCheck size={14} color="#f97316" />
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fb923c', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Account Protected Workspace
-            </span>
+            <CheckSquare size={22} />
           </div>
 
-          <h1 style={{ fontSize: '1.85rem', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.03em' }}>
-            Chrono<span style={{ color: 'var(--brand)' }}>Tasks</span>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.025em' }}>
+            ChronoTasks
           </h1>
-          <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', marginTop: '0.35rem', lineHeight: 1.5 }}>
-            Sign in or create an account to access your unique workspace, real-time collaboration, and workload alerts.
+          <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem', lineHeight: 1.5 }}>
+            Sign in to access your unique workspace, time horizon radar, and collaborative delivery.
           </p>
         </div>
 
         {/* Auth Card */}
         <div className="clean-card" style={{
-          padding: '1.85rem',
-          background: '#111827',
+          padding: '1.75rem',
+          background: '#0f131c',
           borderRadius: 'var(--radius-lg)',
-          boxShadow: '0 20px 45px rgba(0, 0, 0, 0.55)'
+          boxShadow: 'var(--shadow-lg)'
         }}>
           {!isSupabaseReady && (
             <div style={{
-              background: 'rgba(249, 115, 22, 0.1)',
-              border: '1px solid rgba(249, 115, 22, 0.3)',
+              background: 'var(--accent-time-subtle)',
+              border: '1px solid var(--accent-time-border)',
               borderRadius: 'var(--radius-sm)',
               padding: '0.75rem 0.95rem',
               marginBottom: '1.25rem',
@@ -103,7 +102,7 @@ export function AuthGate() {
               color: '#fed7aa',
               lineHeight: 1.5
             }}>
-              <div style={{ fontWeight: 600, color: '#fb923c', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div style={{ fontWeight: 600, color: '#fbbf24', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <AlertCircle size={14} /> Missing .env.local Configuration
               </div>
               Create a <code style={{ background: 'rgba(0,0,0,0.3)', padding: '0.1rem 0.3rem', borderRadius: '3px' }}>.env.local</code> file in this project with your Supabase credentials to activate authentication.
@@ -124,51 +123,51 @@ export function AuthGate() {
               type="button"
               onClick={() => { setMode('signin'); setErrorMessage(null); setSuccessMessage(null); }}
               style={{
-                padding: '0.55rem',
+                padding: '0.5rem',
                 borderRadius: 'var(--radius-sm)',
                 border: 'none',
                 background: mode === 'signin' ? 'var(--brand)' : 'transparent',
                 color: mode === 'signin' ? '#ffffff' : 'var(--text-secondary)',
                 fontWeight: 600,
-                fontSize: '0.82rem',
+                fontSize: '0.8rem',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease'
               }}
             >
-              Sign In
+              Sign in
             </button>
             <button
               type="button"
               onClick={() => { setMode('signup'); setErrorMessage(null); setSuccessMessage(null); }}
               style={{
-                padding: '0.55rem',
+                padding: '0.5rem',
                 borderRadius: 'var(--radius-sm)',
                 border: 'none',
                 background: mode === 'signup' ? 'var(--brand)' : 'transparent',
                 color: mode === 'signup' ? '#ffffff' : 'var(--text-secondary)',
                 fontWeight: 600,
-                fontSize: '0.82rem',
+                fontSize: '0.8rem',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease'
               }}
             >
-              Sign Up
+              Create account
             </button>
           </div>
 
-          {/* Feedback Banners */}
+          {/* Feedback Messages */}
           {errorMessage && (
             <div style={{
               background: 'var(--accent-red-subtle)',
-              border: '1px solid rgba(239, 68, 68, 0.25)',
-              color: '#f87171',
-              padding: '0.65rem 0.85rem',
+              border: '1px solid var(--accent-red-border)',
               borderRadius: 'var(--radius-sm)',
-              fontSize: '0.78rem',
+              padding: '0.65rem 0.85rem',
+              marginBottom: '1rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '1rem'
+              gap: '0.45rem',
+              color: '#f87171',
+              fontSize: '0.78rem'
             }}>
               <AlertCircle size={15} style={{ flexShrink: 0 }} />
               <span>{errorMessage}</span>
@@ -178,15 +177,15 @@ export function AuthGate() {
           {successMessage && (
             <div style={{
               background: 'var(--accent-green-subtle)',
-              border: '1px solid rgba(16, 185, 129, 0.25)',
-              color: '#34d399',
-              padding: '0.65rem 0.85rem',
+              border: '1px solid var(--accent-green-border)',
               borderRadius: 'var(--radius-sm)',
-              fontSize: '0.78rem',
+              padding: '0.65rem 0.85rem',
+              marginBottom: '1rem',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              marginBottom: '1rem'
+              gap: '0.45rem',
+              color: '#34d399',
+              fontSize: '0.78rem'
             }}>
               <CheckCircle2 size={15} style={{ flexShrink: 0 }} />
               <span>{successMessage}</span>
@@ -197,25 +196,25 @@ export function AuthGate() {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
             {mode === 'signup' && (
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
-                  Full Name
+                <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+                  Full name
                 </label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   <UserIcon size={14} color="var(--text-muted)" style={{ position: 'absolute', left: '0.75rem' }} />
                   <input
                     type="text"
                     required
-                    placeholder="Your Name"
+                    placeholder="Alex Morgan"
                     value={displayName}
                     onChange={e => setDisplayName(e.target.value)}
                     style={{
                       width: '100%',
-                      background: 'rgba(255, 255, 255, 0.05)',
+                      background: 'rgba(255, 255, 255, 0.04)',
                       border: '1px solid var(--border-subtle)',
                       color: '#ffffff',
-                      padding: '0.6rem 0.75rem 0.6rem 2.25rem',
+                      padding: '0.55rem 0.75rem 0.55rem 2.25rem',
                       borderRadius: 'var(--radius-md)',
-                      fontSize: '0.84rem',
+                      fontSize: '0.82rem',
                       outline: 'none'
                     }}
                   />
@@ -224,7 +223,7 @@ export function AuthGate() {
             )}
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+              <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
                 Email address
               </label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -232,17 +231,17 @@ export function AuthGate() {
                 <input
                   type="email"
                   required
-                  placeholder="you@company.com"
+                  placeholder="alex@example.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   style={{
                     width: '100%',
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    background: 'rgba(255, 255, 255, 0.04)',
                     border: '1px solid var(--border-subtle)',
                     color: '#ffffff',
-                    padding: '0.6rem 0.75rem 0.6rem 2.25rem',
+                    padding: '0.55rem 0.75rem 0.55rem 2.25rem',
                     borderRadius: 'var(--radius-md)',
-                    fontSize: '0.84rem',
+                    fontSize: '0.82rem',
                     outline: 'none'
                   }}
                 />
@@ -250,7 +249,7 @@ export function AuthGate() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
+              <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
                 Password
               </label>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -264,12 +263,12 @@ export function AuthGate() {
                   onChange={e => setPassword(e.target.value)}
                   style={{
                     width: '100%',
-                    background: 'rgba(255, 255, 255, 0.05)',
+                    background: 'rgba(255, 255, 255, 0.04)',
                     border: '1px solid var(--border-subtle)',
                     color: '#ffffff',
-                    padding: '0.6rem 2.4rem 0.6rem 2.25rem',
+                    padding: '0.55rem 2.4rem 0.55rem 2.25rem',
                     borderRadius: 'var(--radius-md)',
-                    fontSize: '0.84rem',
+                    fontSize: '0.82rem',
                     outline: 'none'
                   }}
                 />
@@ -285,12 +284,11 @@ export function AuthGate() {
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    padding: '0.25rem',
-                    transition: 'color 0.15s ease'
+                    padding: '0.2rem'
                   }}
                   title={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
             </div>
@@ -302,8 +300,8 @@ export function AuthGate() {
               style={{
                 width: '100%',
                 marginTop: '0.4rem',
-                padding: '0.65rem',
-                fontSize: '0.85rem',
+                padding: '0.6rem',
+                fontSize: '0.84rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -316,44 +314,44 @@ export function AuthGate() {
           </form>
         </div>
 
-        {/* Feature Highlights / Trust Elements */}
+        {/* Feature Highlights */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '0.75rem',
+          gap: '0.65rem',
           textAlign: 'center'
         }}>
           <div style={{
-            background: 'rgba(255, 255, 255, 0.02)',
+            background: 'var(--bg-subtle)',
             border: '1px solid var(--border-subtle)',
             borderRadius: 'var(--radius-md)',
-            padding: '0.75rem 0.5rem'
+            padding: '0.65rem 0.45rem'
           }}>
-            <ShieldCheck size={16} color="var(--accent-green)" style={{ margin: '0 auto 0.35rem' }} />
-            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#ffffff' }}>Unique Data</div>
-            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>Encrypted per user</div>
+            <ShieldCheck size={15} color="var(--accent-green)" style={{ margin: '0 auto 0.25rem' }} />
+            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#ffffff' }}>Encrypted</div>
+            <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Unique per user</div>
           </div>
 
           <div style={{
-            background: 'rgba(255, 255, 255, 0.02)',
+            background: 'var(--bg-subtle)',
             border: '1px solid var(--border-subtle)',
             borderRadius: 'var(--radius-md)',
-            padding: '0.75rem 0.5rem'
+            padding: '0.65rem 0.45rem'
           }}>
-            <Users size={16} color="var(--brand)" style={{ margin: '0 auto 0.35rem' }} />
-            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#ffffff' }}>Team Sharing</div>
-            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>Invite by email</div>
+            <Users size={15} color="var(--brand)" style={{ margin: '0 auto 0.25rem' }} />
+            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#ffffff' }}>Invites</div>
+            <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Accept to join</div>
           </div>
 
           <div style={{
-            background: 'rgba(255, 255, 255, 0.02)',
+            background: 'var(--bg-subtle)',
             border: '1px solid var(--border-subtle)',
             borderRadius: 'var(--radius-md)',
-            padding: '0.75rem 0.5rem'
+            padding: '0.65rem 0.45rem'
           }}>
-            <BellRing size={16} color="#fb923c" style={{ margin: '0 auto 0.35rem' }} />
-            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#ffffff' }}>Overload Alerts</div>
-            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>Automated emails</div>
+            <BellRing size={15} color="var(--accent-time)" style={{ margin: '0 auto 0.25rem' }} />
+            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#ffffff' }}>Horizons</div>
+            <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Radar alerts</div>
           </div>
         </div>
       </div>
